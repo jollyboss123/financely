@@ -1,1 +1,1 @@
-GET https://localhost:8081
+GET https://0.0.0.0:8081/api/health
