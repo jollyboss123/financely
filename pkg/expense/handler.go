@@ -9,6 +9,7 @@ import (
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
+	s "github.com/shopspring/decimal"
 	"net/http"
 	"strconv"
 )
@@ -134,4 +135,15 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Json(w, http.StatusOK, nil)
+}
+
+func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
+	total, err := h.expenseRepo.Total(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	response.Json(w, http.StatusOK, map[string]s.Decimal{
+		"total": total,
+	})
 }

@@ -14,6 +14,7 @@ func SetupRoutes(router *chi.Mux, validator *validator.Validate, repo *expenseRe
 		r.Post("/", h.Create)
 		r.Put("/{expenseID}", h.Update)
 		r.Delete("/{expenseID}", h.Delete)
+		r.Get("/total", h.Total)
 	})
 	return h
 }
