@@ -6,3 +6,19 @@ GET https://0.0.0.0:8081/api/health
 
 ### readiness
 GET https://0.0.0.0:8081/api/health/readiness
+
+### list of expenses
+GET https://0.0.0.0:8081/api/v1/expense
+
+### expense by id
+GET https://0.0.0.0:8081/api/v1/expense/1
+
+### create expense
+POST https://0.0.0.0:8081/api/v1/expense
+Content-Type: application/json
+
+{
+  "title": "Test",
+  "amount": 10.0
+}
+

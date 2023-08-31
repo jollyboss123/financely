@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/jollyboss123/finance-tracker/pkg/expense"
 	"github.com/jollyboss123/finance-tracker/pkg/health"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
@@ -11,6 +12,7 @@ import (
 func (s *Server) InitDomains() {
 	s.initVersion()
 	s.initHealth()
+	s.initExpense()
 }
 
 func (s *Server) initVersion() {
@@ -28,4 +30,9 @@ func (s *Server) initVersion() {
 func (s *Server) initHealth() {
 	newHealthRepo := health.NewRepo(s.db)
 	health.SetupRoutes(s.router, newHealthRepo)
+}
+
+func (s *Server) initExpense() {
+	newExpenseRepo := expense.New(s.db)
+	expense.SetupRoutes(s.router, s.validator, newExpenseRepo)
 }
