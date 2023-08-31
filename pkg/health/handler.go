@@ -1,8 +1,7 @@
 package health
 
 import (
-	"encoding/json"
-	"log"
+	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"net/http"
 )
 
@@ -23,24 +22,8 @@ func (h *Handler) Health(w http.ResponseWriter, _ *http.Request) {
 func (h *Handler) Readiness(w http.ResponseWriter, _ *http.Request) {
 	err := h.healthRepo.Readiness()
 	if err != nil {
-		w.Header().Set("Content-Type", "application/problem+json")
-		w.WriteHeader(http.StatusInternalServerError)
-
-		p := map[string]string{
-			"message": err.Error(),
-		}
-		data, err := json.Marshal(p)
-		if err != nil {
-			log.Println(err)
-		}
-
-		if string(data) == "null" {
-			return
-		}
-
-		_, err = w.Write(data)
-		if err != nil {
-			log.Println(err)
-		}
+		response.Error(w, http.StatusInternalServerError, err)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
 }

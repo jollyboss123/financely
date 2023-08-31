@@ -20,7 +20,6 @@ import (
 )
 
 type Server struct {
-	l       *log.Logger
 	Version string
 	cfg     *config.Config
 
@@ -47,13 +46,6 @@ func New(opts ...Options) *Server {
 	}
 
 	return s
-}
-
-func WithLogger(l *log.Logger) Options {
-	return func(opts *Server) error {
-		opts.l = l
-		return nil
-	}
 }
 
 func WithVersion(version string) Options {
@@ -119,7 +111,7 @@ func (s *Server) setTls() {
 
 func (s *Server) NewDatabase() {
 	if s.cfg.Database.Driver == "" {
-		s.l.Fatalln("please fill in database credentials in .env file or set in environment variable")
+		log.Fatalln("please fill in database credentials in .env file or set in environment variable")
 	}
 
 	s.db = database.New(s.cfg.Database)
@@ -172,10 +164,10 @@ func (s *Server) Config() *config.Config {
 }
 
 func start(s *Server) {
-	s.l.Printf("Serving at %s:%s\n", s.cfg.Api.Host, s.cfg.Api.Port)
+	log.Printf("Serving at %s:%s\n", s.cfg.Api.Host, s.cfg.Api.Port)
 	err := s.httpServer.ListenAndServeTLS(s.cfg.Tls.CertFile, s.cfg.Tls.KeyFile)
 	if err != nil {
-		s.l.Printf("Error starting server, %s\n", err)
+		log.Printf("Error starting server, %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -186,14 +178,14 @@ func gracefulShutdown(ctx context.Context, s *Server) error {
 
 	<-quit
 
-	s.l.Println("Shutting down...")
+	log.Println("Shutting down...")
 
 	ctx, shutdown := context.WithTimeout(ctx, s.Config().Api.GracefulTimeout*time.Second)
 	defer shutdown()
 
 	err := s.httpServer.Shutdown(ctx)
 	if err != nil {
-		s.l.Println(err)
+		log.Println(err)
 	}
 	s.closeResources(ctx)
 
