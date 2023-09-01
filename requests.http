@@ -22,7 +22,7 @@ Accept: application/json
 GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&title=Test
 Accept: application/json
 
-###
+### list of paginated expenses filted by date
 GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&year=2023&month=7
 Accept: application/json
 
@@ -37,7 +37,7 @@ Content-Type: application/json
 {
   "title": "Test",
   "amount": 10.0,
-  "transaction_date": "2023-08-31T15:04:05.123499999Z"
+  "transaction_date": "2023-09-01T15:04:05.123499999Z"
 }
 
 ### edit an expense
@@ -47,14 +47,18 @@ Content-Type: application/json
 {
   "title": "Test",
   "amount": 20.0,
-  "transaction_date": "2023-08-31T15:04:05.123499999Z"
+  "transaction_date": "2023-09-01T15:04:05.123499999Z"
 }
 
 ### delete an expense
 DELETE https://0.0.0.0:8081/api/v1/expense/1
 Accept: application/json
 
-### total expenses
+### total expenses filtered by date
 GET https://0.0.0.0:8081/api/v1/expense/total?year=2023&month=7
+Accept: application/json
+
+### total expenses by default return today's total
+GET https://0.0.0.0:8081/api/v1/expense/total
 Accept: application/json
 

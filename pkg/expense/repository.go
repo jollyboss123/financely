@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	s "github.com/shopspring/decimal"
+	"strings"
 )
 
 type Expense interface {
@@ -29,9 +30,9 @@ const (
 	SelectFromExpenses         = "select * from expenses order by transaction_date desc"
 	SelectFromExpensesPaginate = "select * from expenses order by transaction_date desc limit $1 offset $2"
 	SelectExpenseByID          = "select * from expenses where id = $1"
-	UpdateExpense              = "update expenses set title = $1, amount = $2 where id = $3 returning id"
+	UpdateExpense              = "update expenses set title = $1, amount = $2, transaction_date = $3 where id = $4 returning id"
 	DeleteExpenseByID          = "delete from expenses where id = $1 returning id"
-	TotalExpensesDynamic       = "select sum(amount) from expenses where "
+	TotalExpensesDynamic       = "select COALESCE(sum(amount), 0) from expenses where "
 	SearchExpensesDynamic      = "select * from expenses where title like '%' || $1 || '%' "
 )
 
@@ -86,7 +87,7 @@ func (r *expenseRepository) Read(ctx context.Context, expenseID int) (*Schema, e
 func (r *expenseRepository) Update(ctx context.Context, request *UpdateRequest) error {
 	var returnedID int
 
-	err := r.db.QueryRowContext(ctx, UpdateExpense, request.Title, request.Amount, request.ID).Scan(&returnedID)
+	err := r.db.QueryRowContext(ctx, UpdateExpense, request.Title, request.Amount, request.TransactionDate, request.ID).Scan(&returnedID)
 	if err != nil {
 		return err
 	}
@@ -117,27 +118,33 @@ func (r *expenseRepository) Total(ctx context.Context, filter *Filter) (s.Decima
 		return s.NewFromInt(0), errors.New("filter cannot be nil")
 	}
 
-	baseQuery := TotalExpensesDynamic
+	var clauses []string
 	var sqlParams []interface{}
 	paramCounter := 0
 
-	if filter.Year != "" {
-		paramCounter++
-		baseQuery += fmt.Sprintf("extract(year from transaction_date) = $%d ", paramCounter)
-		sqlParams = append(sqlParams, filter.Year)
+	if filter.Year == "" && filter.Month == "" && filter.Day == "" {
+		clauses = append(clauses, "transaction_date::date = current_date")
+	} else {
+		dateFilters := []struct {
+			Field  string
+			Column string
+		}{
+			{filter.Year, "year"},
+			{filter.Month, "month"},
+			{filter.Day, "day"},
+		}
+
+		for _, dateFilter := range dateFilters {
+			if dateFilter.Field != "" {
+				paramCounter++
+				clause := fmt.Sprintf("extract(%s from transaction_date) = $%d", dateFilter.Column, paramCounter)
+				clauses = append(clauses, clause)
+				sqlParams = append(sqlParams, dateFilter.Field)
+			}
+		}
 	}
 
-	if filter.Month != "" {
-		paramCounter++
-		baseQuery += fmt.Sprintf("and extract(month from transaction_date) = $%d ", paramCounter)
-		sqlParams = append(sqlParams, filter.Month)
-	}
-
-	if filter.Day != "" {
-		paramCounter++
-		baseQuery += fmt.Sprintf("and extract(day from transaction_date) = $%d", paramCounter)
-		sqlParams = append(sqlParams, filter.Day)
-	}
+	baseQuery := TotalExpensesDynamic + strings.Join(clauses, " and ")
 
 	var total s.Decimal
 	err := r.db.GetContext(ctx, &total, baseQuery, sqlParams...)
