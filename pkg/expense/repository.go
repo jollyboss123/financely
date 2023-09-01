@@ -11,7 +11,7 @@ import (
 
 type Expense interface {
 	Create(ctx context.Context, request *CreateRequest) (int, error)
-	List(ctx context.Context) ([]*Schema, error)
+	List(ctx context.Context, filter *Filter) ([]*Schema, error)
 	Read(ctx context.Context, expenseID int) (*Schema, error)
 	Update(ctx context.Context, request *UpdateRequest) error
 	Delete(ctx context.Context, expenseID int) error
@@ -23,12 +23,14 @@ type expenseRepository struct {
 }
 
 const (
-	InsertIntoExpenses = "insert into expenses (title, amount) values ($1, $2) returning id"
-	SelectFromExpenses = "select * from expenses order by created_at desc"
-	SelectExpenseByID  = "select * from expenses where id = $1"
-	UpdateExpense      = "update expenses set title = $1, amount = $2 where id = $3 returning id"
-	DeleteExpenseByID  = "delete from expenses where id = $1 returning id"
-	TotalExpenses      = "select sum(amount) from expenses"
+	InsertIntoExpenses         = "insert into expenses (title, amount, transaction_date) values ($1, $2, $3) returning id"
+	SelectFromExpenses         = "select * from expenses order by transaction_date desc"
+	SelectFromExpensesPaginate = "select * from expenses order by transaction_date desc limit $1 offset $2"
+	SelectExpenseByID          = "select * from expenses where id = $1"
+	UpdateExpense              = "update expenses set title = $1, amount = $2 where id = $3 returning id"
+	DeleteExpenseByID          = "delete from expenses where id = $1 returning id"
+	TotalExpenses              = "select sum(amount) from expenses"
+	SearchBooksPaginate        = "select * from expenses where title like '%' || '%' || $1 || '%' || '%' order by transaction_date desc limit $2 offset $3"
 )
 
 var (
@@ -40,20 +42,30 @@ func New(db *sqlx.DB) *expenseRepository {
 }
 
 func (r *expenseRepository) Create(ctx context.Context, request *CreateRequest) (expenseId int, err error) {
-	if err = r.db.QueryRowContext(ctx, InsertIntoExpenses, request.Title, request.Amount).Scan(&expenseId); err != nil {
+	if err = r.db.QueryRowContext(ctx, InsertIntoExpenses, request.Title, request.Amount, request.TransactionDate).Scan(&expenseId); err != nil {
 		return 0, errors.New("repository.Expense.Create")
 	}
 
 	return expenseId, nil
 }
 
-func (r *expenseRepository) List(ctx context.Context) ([]*Schema, error) {
-	var expenses []*Schema
-	err := r.db.SelectContext(ctx, &expenses, SelectFromExpenses)
-	if err != nil {
-		return nil, ErrFetchingExpenses
+func (r *expenseRepository) List(ctx context.Context, filter *Filter) ([]*Schema, error) {
+	if filter == nil {
+		return nil, errors.New("filter cannot be nil")
 	}
 
+	var expenses []*Schema
+	if filter.Pagination.DisablePaging {
+		err := r.db.SelectContext(ctx, &expenses, SelectFromExpenses)
+		if err != nil {
+			return nil, ErrFetchingExpenses
+		}
+	} else {
+		err := r.db.SelectContext(ctx, &expenses, SelectFromExpensesPaginate, filter.Pagination.Limit, filter.Pagination.Offset)
+		if err != nil {
+			return nil, ErrFetchingExpenses
+		}
+	}
 	return expenses, nil
 }
 

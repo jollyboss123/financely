@@ -37,6 +37,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	errs := validate.Validate(h.validator, request)
 	if errs != nil {
 		response.Errors(w, http.StatusBadRequest, errs)
+		return
 	}
 
 	exID, err := h.expenseRepo.Create(r.Context(), &request)
@@ -78,7 +79,9 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	exs, err := h.expenseRepo.List(r.Context())
+	filters := Filters(r.URL.Query())
+
+	exs, err := h.expenseRepo.List(r.Context(), filters)
 	if err != nil {
 		if errors.Is(err, ErrFetchingExpenses) {
 			response.Error(w, http.StatusBadRequest, err)

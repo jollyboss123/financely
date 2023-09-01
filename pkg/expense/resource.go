@@ -1,11 +1,15 @@
 package expense
 
-import s "github.com/shopspring/decimal"
+import (
+	s "github.com/shopspring/decimal"
+	"time"
+)
 
 type Res struct {
-	ID     int       `json:"id"`
-	Title  string    `json:"title"`
-	Amount s.Decimal `json:"amount"`
+	ID              int       `json:"id"`
+	Title           string    `json:"title"`
+	Amount          s.Decimal `json:"amount"`
+	TransactionDate time.Time `json:"transaction_date"`
 }
 
 func Resource(expense *Schema) *Res {
@@ -13,9 +17,10 @@ func Resource(expense *Schema) *Res {
 		return &Res{}
 	}
 	resource := &Res{
-		ID:     expense.ID,
-		Title:  expense.Title,
-		Amount: expense.Amount,
+		ID:              expense.ID,
+		Title:           expense.Title,
+		Amount:          expense.Amount,
+		TransactionDate: expense.TransactionDate,
 	}
 
 	return resource
