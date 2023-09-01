@@ -18,6 +18,10 @@ Accept: application/json
 GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5
 Accept: application/json
 
+### list of paginated expenses with search
+GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&title=Test
+Accept: application/json
+
 ### expense by id
 GET https://0.0.0.0:8081/api/v1/expense/3
 Accept: application/json

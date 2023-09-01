@@ -16,6 +16,7 @@ type Expense interface {
 	Update(ctx context.Context, request *UpdateRequest) error
 	Delete(ctx context.Context, expenseID int) error
 	Total(ctx context.Context) (s.Decimal, error)
+	Search(ctx context.Context, filter *Filter) ([]*Schema, error)
 }
 
 type expenseRepository struct {
@@ -117,4 +118,17 @@ func (r *expenseRepository) Total(ctx context.Context) (s.Decimal, error) {
 		return s.NewFromInt(0), err
 	}
 	return total, nil
+}
+
+func (r *expenseRepository) Search(ctx context.Context, filter *Filter) ([]*Schema, error) {
+	if filter == nil {
+		return nil, errors.New("filter cannot be nil")
+	}
+	var expenses []*Schema
+	err := r.db.SelectContext(ctx, &expenses, SearchBooksPaginate, filter.Title, filter.Pagination.Limit, filter.Pagination.Offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
 }

@@ -81,18 +81,38 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	filters := Filters(r.URL.Query())
 
-	exs, err := h.expenseRepo.List(r.Context(), filters)
-	if err != nil {
-		if errors.Is(err, ErrFetchingExpenses) {
-			response.Error(w, http.StatusBadRequest, err)
+	var expenses []*Schema
+	ctx := r.Context()
+
+	switch filters.Pagination.Search {
+	case true:
+		resp, err := h.expenseRepo.Search(ctx, filters)
+		if err != nil {
+			if errors.Is(err, ErrFetchingExpenses) {
+				response.Error(w, http.StatusBadRequest, err)
+				return
+			}
+			response.Error(w, http.StatusInternalServerError, err)
 			return
 		}
-		response.Error(w, http.StatusInternalServerError, err)
-		return
-	}
-	expenses := Resources(exs)
+		expenses = resp
 
-	response.Json(w, http.StatusOK, expenses)
+	default:
+		resp, err := h.expenseRepo.List(ctx, filters)
+		if err != nil {
+			if errors.Is(err, ErrFetchingExpenses) {
+				response.Error(w, http.StatusBadRequest, err)
+				return
+			}
+			response.Error(w, http.StatusInternalServerError, err)
+			return
+		}
+		expenses = resp
+	}
+
+	e := Resources(expenses)
+
+	response.Json(w, http.StatusOK, e)
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
