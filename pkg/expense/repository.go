@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	s "github.com/shopspring/decimal"
@@ -15,7 +16,7 @@ type Expense interface {
 	Read(ctx context.Context, expenseID int) (*Schema, error)
 	Update(ctx context.Context, request *UpdateRequest) error
 	Delete(ctx context.Context, expenseID int) error
-	Total(ctx context.Context) (s.Decimal, error)
+	Total(ctx context.Context, filter *Filter) (s.Decimal, error)
 	Search(ctx context.Context, filter *Filter) ([]*Schema, error)
 }
 
@@ -30,8 +31,8 @@ const (
 	SelectExpenseByID          = "select * from expenses where id = $1"
 	UpdateExpense              = "update expenses set title = $1, amount = $2 where id = $3 returning id"
 	DeleteExpenseByID          = "delete from expenses where id = $1 returning id"
-	TotalExpenses              = "select sum(amount) from expenses"
-	SearchBooksPaginate        = "select * from expenses where title like '%' || '%' || $1 || '%' || '%' order by transaction_date desc limit $2 offset $3"
+	TotalExpensesDynamic       = "select sum(amount) from expenses where "
+	SearchExpensesDynamic      = "select * from expenses where title like '%' || $1 || '%' "
 )
 
 var (
@@ -111,9 +112,35 @@ func (r *expenseRepository) Delete(ctx context.Context, expenseID int) error {
 	return nil
 }
 
-func (r *expenseRepository) Total(ctx context.Context) (s.Decimal, error) {
+func (r *expenseRepository) Total(ctx context.Context, filter *Filter) (s.Decimal, error) {
+	if filter == nil {
+		return s.NewFromInt(0), errors.New("filter cannot be nil")
+	}
+
+	baseQuery := TotalExpensesDynamic
+	var sqlParams []interface{}
+	paramCounter := 0
+
+	if filter.Year != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("extract(year from transaction_date) = $%d ", paramCounter)
+		sqlParams = append(sqlParams, filter.Year)
+	}
+
+	if filter.Month != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("and extract(month from transaction_date) = $%d ", paramCounter)
+		sqlParams = append(sqlParams, filter.Month)
+	}
+
+	if filter.Day != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("and extract(day from transaction_date) = $%d", paramCounter)
+		sqlParams = append(sqlParams, filter.Day)
+	}
+
 	var total s.Decimal
-	err := r.db.GetContext(ctx, &total, TotalExpenses)
+	err := r.db.GetContext(ctx, &total, baseQuery, sqlParams...)
 	if err != nil {
 		return s.NewFromInt(0), err
 	}
@@ -124,8 +151,39 @@ func (r *expenseRepository) Search(ctx context.Context, filter *Filter) ([]*Sche
 	if filter == nil {
 		return nil, errors.New("filter cannot be nil")
 	}
+
+	baseQuery := SearchExpensesDynamic
+	sqlParams := []interface{}{filter.Title}
+	paramCounter := 1
+
+	if filter.Year != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("and extract(year from transaction_date) = $%d ", paramCounter)
+		sqlParams = append(sqlParams, filter.Year)
+	}
+
+	if filter.Month != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("and extract(month from transaction_date) = $%d ", paramCounter)
+		sqlParams = append(sqlParams, filter.Month)
+	}
+
+	if filter.Day != "" {
+		paramCounter++
+		baseQuery += fmt.Sprintf("and extract(day from transaction_date) = $%d ", paramCounter)
+		sqlParams = append(sqlParams, filter.Day)
+	}
+
+	paramCounter++
+	baseQuery += fmt.Sprintf("order by transaction_date desc limit $%d ", paramCounter)
+	sqlParams = append(sqlParams, filter.Pagination.Limit)
+
+	paramCounter++
+	baseQuery += fmt.Sprintf("offset $%d", paramCounter)
+	sqlParams = append(sqlParams, filter.Pagination.Offset)
+
 	var expenses []*Schema
-	err := r.db.SelectContext(ctx, &expenses, SearchBooksPaginate, filter.Title, filter.Pagination.Limit, filter.Pagination.Offset)
+	err := r.db.SelectContext(ctx, &expenses, baseQuery, sqlParams...)
 	if err != nil {
 		return nil, err
 	}

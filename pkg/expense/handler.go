@@ -161,7 +161,10 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
-	total, err := h.expenseRepo.Total(r.Context())
+	filters := Filters(r.URL.Query())
+	var total s.Decimal
+
+	total, err := h.expenseRepo.Total(r.Context(), filters)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err)
 		return

@@ -6,10 +6,12 @@ import (
 )
 
 type Filter struct {
-	Pagination      pagination.Filter
-	Title           string `json:"title"`
-	Amount          string `json:"amount"`
-	TransactionDate string `json:"transaction_date"`
+	Pagination pagination.Filter
+	Title      string `json:"title"`
+	Amount     string `json:"amount"`
+	Year       string `json:"year"`
+	Month      string `json:"month"`
+	Day        string `json:"day"`
 }
 
 func Filters(queries url.Values) *Filter {
@@ -17,14 +19,20 @@ func Filters(queries url.Values) *Filter {
 	switch {
 	case queries.Has("title"):
 		fallthrough
-	case queries.Has("transaction_date"):
+	case queries.Has("year"):
+		fallthrough
+	case queries.Has("month"):
+		fallthrough
+	case queries.Has("day"):
 		p.Search = true
 	}
 
 	return &Filter{
-		Pagination:      *p,
-		Title:           queries.Get("title"),
-		Amount:          queries.Get("amount"),
-		TransactionDate: queries.Get("transaction_date"),
+		Pagination: *p,
+		Title:      queries.Get("title"),
+		Amount:     queries.Get("amount"),
+		Year:       queries.Get("year"),
+		Month:      queries.Get("month"),
+		Day:        queries.Get("day"),
 	}
 }
