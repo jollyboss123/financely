@@ -36,8 +36,9 @@ Content-Type: application/json
 
 {
   "title": "Test",
-  "amount": 10.0,
-  "transaction_date": "2023-09-01T15:04:05.123499999Z"
+  "amount": 200,
+  "currency_code": "MYR",
+  "transaction_date": "2023-09-02T15:04:05.123499999Z"
 }
 
 ### edit an expense
@@ -46,7 +47,8 @@ Content-Type: application/json
 
 {
   "title": "Test",
-  "amount": 20.0,
+  "amount": 200,
+  "currency_code": "USD",
   "transaction_date": "2023-09-01T15:04:05.123499999Z"
 }
 

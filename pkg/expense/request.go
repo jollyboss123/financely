@@ -1,19 +1,23 @@
 package expense
 
 import (
-	s "github.com/shopspring/decimal"
+	"github.com/google/uuid"
 	"time"
 )
 
 type CreateRequest struct {
 	Title           string    `json:"title" validate:"required"`
-	Amount          s.Decimal `json:"amount" validate:"required"`
+	Amount          uint64    `json:"amount" validate:"required,gt=0"`
+	CurrencyCode    string    `json:"currency_code" validate:"required"`
+	CurrencyID      uuid.UUID `json:"currency_id" validate:"required"`
 	TransactionDate time.Time `json:"transaction_date" validate:"required"`
 }
 
 type UpdateRequest struct {
-	ID              int       `json:"-"`
-	Title           string    `json:"title" validate:"required"`
-	Amount          s.Decimal `json:"amount" validate:"required"`
+	ID              uuid.UUID `json:"-"`
+	Title           string    `json:"title"`
+	Amount          uint64    `json:"amount" validate:"gt=0"`
+	CurrencyCode    string    `json:"currency_code"`
+	CurrencyID      uuid.UUID `json:"currency_id"`
 	TransactionDate time.Time `json:"transaction_date" validate:"required"`
 }

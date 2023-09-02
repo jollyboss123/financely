@@ -1,14 +1,14 @@
 package expense
 
 import (
-	s "github.com/shopspring/decimal"
+	"github.com/google/uuid"
 	"time"
 )
 
 type Res struct {
-	ID              int       `json:"id"`
+	ID              uuid.UUID `json:"id"`
 	Title           string    `json:"title"`
-	Amount          s.Decimal `json:"amount"`
+	Amount          uint64    `json:"amount"`
 	TransactionDate time.Time `json:"transaction_date"`
 }
 

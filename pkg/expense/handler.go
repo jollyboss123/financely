@@ -6,23 +6,25 @@ import (
 	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	"github.com/jollyboss123/finance-tracker/pkg/currency"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
-	s "github.com/shopspring/decimal"
 	"net/http"
-	"strconv"
 )
 
 type Handler struct {
-	expenseRepo Expense
-	validator   *validator.Validate
+	expenseRepo  Expense
+	currencyRepo currency.Currency
+	validator    *validator.Validate
 }
 
-func NewHandler(expenseRepo Expense, validator *validator.Validate) *Handler {
+func NewHandler(expenseRepo Expense, currencyRepo currency.Currency, validator *validator.Validate) *Handler {
 	return &Handler{
-		expenseRepo: expenseRepo,
-		validator:   validator,
+		expenseRepo:  expenseRepo,
+		currencyRepo: currencyRepo,
+		validator:    validator,
 	}
 }
 
@@ -33,6 +35,13 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, err)
 		return
 	}
+
+	cID, err := h.currencyRepo.ReadByCode(r.Context(), request.CurrencyCode)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, err)
+		return
+	}
+	request.CurrencyID = cID
 
 	errs := validate.Validate(h.validator, request)
 	if errs != nil {
@@ -57,7 +66,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
-	expenseID, err := strconv.Atoi(chi.URLParam(r, "expenseID"))
+	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, message.ErrBadRequest)
 		return
@@ -116,17 +125,32 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
-	expenseID, err := strconv.Atoi(chi.URLParam(r, "expenseID"))
+	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, message.ErrBadRequest)
+		return
+	}
+
 	var request UpdateRequest
 	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err)
+		return
 	}
 	request.ID = expenseID
+	if request.CurrencyCode != "" {
+		cID, err := h.currencyRepo.ReadByCode(r.Context(), request.CurrencyCode)
+		if err != nil {
+			response.Error(w, http.StatusBadRequest, err)
+			return
+		}
+		request.CurrencyID = cID
+	}
 
 	errs := validate.Validate(h.validator, request)
 	if errs != nil {
 		response.Errors(w, http.StatusBadRequest, errs)
+		return
 	}
 
 	err = h.expenseRepo.Update(r.Context(), &request)
@@ -146,9 +170,10 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
-	expenseID, err := strconv.Atoi(chi.URLParam(r, "expenseID"))
+	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err)
+		return
 	}
 
 	err = h.expenseRepo.Delete(r.Context(), expenseID)
@@ -162,14 +187,14 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 	filters := Filters(r.URL.Query())
-	var total s.Decimal
+	var total uint64
 
 	total, err := h.expenseRepo.Total(r.Context(), filters)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err)
 		return
 	}
-	response.Json(w, http.StatusOK, map[string]s.Decimal{
+	response.Json(w, http.StatusOK, map[string]uint64{
 		"total": total,
 	})
 }

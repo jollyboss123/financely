@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/jollyboss123/finance-tracker/pkg/currency"
 	"github.com/jollyboss123/finance-tracker/pkg/expense"
 	"github.com/jollyboss123/finance-tracker/pkg/health"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
@@ -34,5 +35,11 @@ func (s *Server) initHealth() {
 
 func (s *Server) initExpense() {
 	newExpenseRepo := expense.New(s.db)
-	expense.SetupRoutes(s.router, s.validator, newExpenseRepo)
+	newCurrencyRepo := currency.New(s.db)
+	expense.SetupRoutes(s.router, s.validator, newExpenseRepo, newCurrencyRepo)
+}
+
+func (s *Server) initCurrency() {
+	newCurrencyRepo := currency.New(s.db)
+	currency.SetupRoutes(s.router, s.validator, newCurrencyRepo)
 }
