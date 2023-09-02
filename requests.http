@@ -22,7 +22,7 @@ Accept: application/json
 GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&title=Test
 Accept: application/json
 
-### list of paginated expenses filted by date
+### list of paginated expenses filter by date
 GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&year=2023&month=7
 Accept: application/json
 

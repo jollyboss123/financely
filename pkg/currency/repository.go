@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
+	"strings"
 )
 
 type Currency interface {
@@ -44,7 +45,7 @@ func New(db *sqlx.DB) *currencyRepository {
 
 func (cr *currencyRepository) Create(ctx context.Context, request *CreateRequest) (currencyID uuid.UUID, err error) {
 	if err = cr.db.QueryRowContext(ctx, InsertIntoCurrency,
-		request.Code,
+		strings.ToUpper(request.Code),
 		request.NumericCode,
 		request.Fraction,
 		request.Grapheme,
@@ -91,7 +92,7 @@ func (cr *currencyRepository) Read(ctx context.Context, currencyID uuid.UUID) (*
 
 func (cr *currencyRepository) ReadByCode(ctx context.Context, code string) (uuid.UUID, error) {
 	var cID uuid.UUID
-	err := cr.db.QueryRowContext(ctx, SelectCurrencyByCode, code).Scan(&cID)
+	err := cr.db.QueryRowContext(ctx, SelectCurrencyByCode, strings.ToUpper(code)).Scan(&cID)
 	if err != nil {
 		return uuid.Nil, errors.New("repository.Currency.Read")
 	}
@@ -102,7 +103,7 @@ func (cr *currencyRepository) Update(ctx context.Context, request *UpdateRequest
 	var returnedID uuid.UUID
 
 	err := cr.db.QueryRowContext(ctx, UpdateCurrency,
-		request.Code,
+		strings.ToUpper(request.Code),
 		request.NumericCode,
 		request.Fraction,
 		request.Grapheme,
@@ -144,7 +145,7 @@ func (cr *currencyRepository) Search(ctx context.Context, filter *Filter) ([]*Sc
 
 	var currencies []*Schema
 	err := cr.db.SelectContext(ctx, &currencies, SearchCurrencyPaginate,
-		filter.Code,
+		strings.ToUpper(filter.Code),
 		filter.Pagination.Limit,
 		filter.Pagination.Offset)
 	if err != nil {

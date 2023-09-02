@@ -6,6 +6,7 @@ import (
 	"github.com/jollyboss123/finance-tracker/pkg/expense"
 	"github.com/jollyboss123/finance-tracker/pkg/health"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
+	"github.com/jollyboss123/finance-tracker/pkg/rate"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"net/http"
 )
@@ -42,4 +43,9 @@ func (s *Server) initExpense() {
 func (s *Server) initCurrency() {
 	newCurrencyRepo := currency.New(s.db)
 	currency.SetupRoutes(s.router, s.validator, newCurrencyRepo)
+}
+
+func (s *Server) initRate() {
+	newRateRepo := rate.New(s.db)
+	rate.SetupRoutes(s.router, s.validator, newRateRepo)
 }
