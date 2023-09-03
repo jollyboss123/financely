@@ -11,6 +11,7 @@ import (
 	"github.com/jollyboss123/finance-tracker/database"
 	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
+	"github.com/jollyboss123/finance-tracker/pkg/middleware/requestlog"
 	"github.com/rs/cors"
 	"log"
 	"net/http"
@@ -168,6 +169,7 @@ func (s *Server) Config() *config.Config {
 
 func start(s *Server) {
 	s.l.Info().Msgf("Serving at %s:%s", s.cfg.Api.Host, s.cfg.Api.Port)
+	s.httpServer.Handler = requestlog.NewHandler(s.router.ServeHTTP, s.l)
 	err := s.httpServer.ListenAndServeTLS(s.cfg.Tls.CertFile, s.cfg.Tls.KeyFile)
 	if err != nil {
 		s.l.Error().Err(err).Msg("Error starting server")
