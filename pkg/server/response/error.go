@@ -2,17 +2,17 @@ package response
 
 import (
 	"encoding/json"
-	"log"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"net/http"
 )
 
-func Error(w http.ResponseWriter, statusCode int, message error) {
+func Error(l *logger.Logger, w http.ResponseWriter, statusCode int, message error) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(statusCode)
 
 	var p map[string]string
 	if message == nil {
-		write(w, nil)
+		write(l, w, nil)
 		return
 	}
 
@@ -21,22 +21,22 @@ func Error(w http.ResponseWriter, statusCode int, message error) {
 	}
 	data, err := json.Marshal(p)
 	if err != nil {
-		log.Println(err)
+		l.Error().Err(err).Msg("failed to marshal error")
 	}
 
 	if string(data) == "null" {
 		return
 	}
 
-	write(w, data)
+	write(l, w, data)
 }
 
-func Errors(w http.ResponseWriter, statusCode int, errors []string) {
+func ValidationErrors(l *logger.Logger, w http.ResponseWriter, errors []string) {
 	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(statusCode)
+	w.WriteHeader(http.StatusUnprocessableEntity)
 
 	if errors == nil {
-		write(w, nil)
+		write(l, w, nil)
 		return
 	}
 
@@ -45,19 +45,19 @@ func Errors(w http.ResponseWriter, statusCode int, errors []string) {
 	}
 	data, err := json.Marshal(p)
 	if err != nil {
-		log.Println(err)
+		l.Error().Err(err).Msg("failed to marshal validation error")
 	}
 
 	if string(data) == "null" {
 		return
 	}
 
-	write(w, data)
+	write(l, w, data)
 }
 
-func write(w http.ResponseWriter, data []byte) {
+func write(l *logger.Logger, w http.ResponseWriter, data []byte) {
 	_, err := w.Write(data)
 	if err != nil {
-		log.Println(err)
+		l.Error().Err(err).Msg("failed to write data")
 	}
 }

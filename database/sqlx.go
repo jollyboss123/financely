@@ -6,12 +6,13 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/config"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func New(cfg config.Database) *sqlx.DB {
+func New(l *logger.Logger, cfg config.Database) *sqlx.DB {
 	var dsn string
 	dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Pass, cfg.Name)
@@ -22,24 +23,24 @@ func New(cfg config.Database) *sqlx.DB {
 		log.Fatal(err)
 	}
 
-	alive(db.DB)
+	alive(l, db.DB)
 
 	return db
 }
 
-func alive(db *sql.DB) {
-	log.Println("Connecting to database...")
+func alive(l *logger.Logger, db *sql.DB) {
+	l.Info().Msg("Connecting to database...")
 	base, capacity := time.Second, time.Minute
 	backoff := base
 
 	for {
 		_, err := db.Exec("SELECT true")
 		if err == nil {
-			log.Println("Database connected")
+			l.Info().Msg("Database connected")
 			return
 		}
 
-		log.Println("Database connection failed:", err)
+		l.Error().Err(err).Msg("Database connection failed")
 
 		jitter := time.Duration(rand.Int63n(int64(backoff * 3 / 2)))
 		sleep := base + jitter

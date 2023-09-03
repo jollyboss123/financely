@@ -2,12 +2,13 @@ package response
 
 import (
 	"encoding/json"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	"log"
 	"net/http"
 )
 
-func Json(w http.ResponseWriter, statusCode int, payload interface{}) {
+func Json(l *logger.Logger, w http.ResponseWriter, statusCode int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
@@ -18,7 +19,7 @@ func Json(w http.ResponseWriter, statusCode int, payload interface{}) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Println(err)
-		Error(w, http.StatusInternalServerError, message.ErrInternalError)
+		Error(l, w, http.StatusInternalServerError, message.ErrInternalError)
 		return
 	}
 
@@ -30,7 +31,7 @@ func Json(w http.ResponseWriter, statusCode int, payload interface{}) {
 	_, err = w.Write(data)
 	if err != nil {
 		log.Println(err)
-		Error(w, http.StatusInternalServerError, message.ErrInternalError)
+		Error(l, w, http.StatusInternalServerError, message.ErrInternalError)
 		return
 	}
 }

@@ -3,14 +3,12 @@ package validate
 import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
-	"log"
 )
 
 func Validate(v *validator.Validate, generic any) []string {
 	err := v.Struct(generic)
 	if err != nil {
 		if _, ok := err.(*validator.InvalidValidationError); ok {
-			log.Println(err)
 			return nil
 		}
 

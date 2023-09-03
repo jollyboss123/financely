@@ -6,7 +6,7 @@ import (
 )
 
 type Cron struct {
-	ExchangeRatesJobName string        `split_words:"true" default:"fetch.exchange-rates"`
+	ExchangeRatesJobID   string        `split_words:"true" default:"fetch.exchange-rates"`
 	ExchangeRatesEnabled bool          `split_words:"true" default:"true"`
 	ExchangeRatesStart   string        `split_words:"true"`
 	ExchangeRatesDelay   time.Duration `split_words:"true" default:"24h"`

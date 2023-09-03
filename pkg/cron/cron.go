@@ -3,7 +3,7 @@ package cron
 import (
 	"context"
 	"errors"
-	"log"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"sync"
 	"time"
 )
@@ -20,7 +20,7 @@ type JobFunc func(time.Time)
 var jobs = make(map[string]*Job)
 var mu sync.Mutex
 
-func Start(jobID string, startTime time.Time, delay time.Duration, jobFunc JobFunc) (string, error) {
+func Start(l *logger.Logger, jobID string, startTime time.Time, delay time.Duration, jobFunc JobFunc) (string, error) {
 	mu.Lock()
 	_, exists := jobs[jobID]
 	mu.Unlock()
@@ -45,7 +45,7 @@ func Start(jobID string, startTime time.Time, delay time.Duration, jobFunc JobFu
 	go func() {
 		for t := range cron(ctx, startTime, delay) {
 			jobFunc(t)
-			log.Printf("job: %s run at %v\n", jobID, t.Format("2006-01-02 15:04:05"))
+			l.Info().Str("id", jobID).Msgf("ran at: %v", t.Format("2006-01-02 15:04:05"))
 		}
 	}()
 

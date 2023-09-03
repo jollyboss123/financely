@@ -22,7 +22,7 @@ func (s *Server) initVersion() {
 		r.Use(middleware.Json)
 
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			response.Json(w, http.StatusOK, map[string]string{
+			response.Json(s.l, w, http.StatusOK, map[string]string{
 				"version": s.Version,
 			})
 		})
@@ -31,7 +31,7 @@ func (s *Server) initVersion() {
 
 func (s *Server) initHealth() {
 	newHealthRepo := health.NewRepo(s.db)
-	health.SetupRoutes(s.router, newHealthRepo)
+	health.SetupRoutes(s.l, s.router, newHealthRepo)
 }
 
 func (s *Server) initExpense() {
@@ -39,16 +39,16 @@ func (s *Server) initExpense() {
 	newCurrencyRepo := currency.New(s.db)
 	newRateRepo := rate.New(s.db)
 	er := rate.NewExchangeRates(newRateRepo)
-	expense.SetupRoutes(s.router, s.validator, newExpenseRepo, newCurrencyRepo, er)
+	expense.SetupRoutes(s.l, s.router, s.validator, newExpenseRepo, newCurrencyRepo, er)
 }
 
 func (s *Server) initCurrency() {
 	newCurrencyRepo := currency.New(s.db)
-	currency.SetupRoutes(s.router, s.validator, newCurrencyRepo)
+	currency.SetupRoutes(s.l, s.router, s.validator, newCurrencyRepo)
 }
 
 func (s *Server) initRate() {
 	newRateRepo := rate.New(s.db)
 	r := rate.NewExchangeRates(newRateRepo)
-	rate.SetupRoutes(s.router, s.validator, newRateRepo, r, s.cfg)
+	rate.SetupRoutes(s.l, s.router, s.validator, newRateRepo, r, s.cfg)
 }

@@ -36,7 +36,7 @@ Content-Type: application/json
 
 {
   "title": "Test",
-  "amount": 200,
+  "amount": -300,
   "currency_code": "USD",
   "transaction_date": "2023-09-03T15:04:05.123499999Z"
 }

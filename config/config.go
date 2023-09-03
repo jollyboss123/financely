@@ -2,7 +2,6 @@ package config
 
 import (
 	"github.com/joho/godotenv"
-	"log"
 )
 
 type Config struct {
@@ -17,7 +16,7 @@ type Config struct {
 func New() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println(err)
+		panic(err)
 	}
 
 	return &Config{

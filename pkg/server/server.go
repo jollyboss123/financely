@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/config"
 	"github.com/jollyboss123/finance-tracker/database"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
 	"github.com/rs/cors"
 	"log"
@@ -21,6 +22,7 @@ import (
 
 type Server struct {
 	Version string
+	l       *logger.Logger
 	cfg     *config.Config
 
 	db *sqlx.DB
@@ -50,7 +52,7 @@ func New(opts ...Options) *Server {
 
 func WithVersion(version string) Options {
 	return func(opts *Server) error {
-		log.Printf("Starting API version: %s\n", version)
+		opts.l.Info().Msgf("Starting API version: %s", version)
 		opts.Version = version
 		return nil
 	}
@@ -58,6 +60,7 @@ func WithVersion(version string) Options {
 
 func defaultServer() *Server {
 	return &Server{
+		l:      logger.New(true),
 		cfg:    config.New(),
 		router: chi.NewRouter(),
 	}
@@ -111,10 +114,10 @@ func (s *Server) setTls() {
 
 func (s *Server) NewDatabase() {
 	if s.cfg.Database.Driver == "" {
-		log.Fatalln("please fill in database credentials in .env file or set in environment variable")
+		s.l.Error().Msg("please fill in database credentials in .env file or set in environment variable")
 	}
 
-	s.db = database.New(s.cfg.Database)
+	s.db = database.New(s.l, s.cfg.Database)
 	s.db.SetMaxOpenConns(s.cfg.Database.MaxConnectionPool)
 	s.db.SetMaxIdleConns(s.cfg.Database.MaxIdleConnections)
 	s.db.SetConnMaxLifetime(s.cfg.Database.ConnectionMaxLifetime)
@@ -164,10 +167,10 @@ func (s *Server) Config() *config.Config {
 }
 
 func start(s *Server) {
-	log.Printf("Serving at %s:%s\n", s.cfg.Api.Host, s.cfg.Api.Port)
+	s.l.Info().Msgf("Serving at %s:%s", s.cfg.Api.Host, s.cfg.Api.Port)
 	err := s.httpServer.ListenAndServeTLS(s.cfg.Tls.CertFile, s.cfg.Tls.KeyFile)
 	if err != nil {
-		log.Printf("Error starting server, %s\n", err)
+		s.l.Error().Err(err).Msg("Error starting server")
 		os.Exit(1)
 	}
 }
@@ -178,14 +181,14 @@ func gracefulShutdown(ctx context.Context, s *Server) error {
 
 	<-quit
 
-	log.Println("Shutting down...")
+	s.l.Info().Msg("Shutting down...")
 
 	ctx, shutdown := context.WithTimeout(ctx, s.Config().Api.GracefulTimeout*time.Second)
 	defer shutdown()
 
 	err := s.httpServer.Shutdown(ctx)
 	if err != nil {
-		log.Println(err)
+		s.l.Err(err)
 	}
 	s.closeResources(ctx)
 
