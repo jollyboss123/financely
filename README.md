@@ -20,3 +20,6 @@ A one-stop personal finance tracker
 * Fuzzy search with PostgreSQL
   * [fuzzystrmatch](https://www.postgresql.org/docs/current/fuzzystrmatch.html)
   * [PostgreSQL Fuzzy Text Search: Not so fuzzy to fuzziest](https://blog.brendanscullion.com/postgresql-text-search)
+* Implementing request logger
+  * [Learning cloud native go - Adding Zerolog logger](https://learning-cloud-native-go.github.io/docs/adding-zerolog-logger/)
+  * [The Go Cloud Development Kit (Go CDK)](https://github.com/google/go-cloud/blob/master/server/requestlog/requestlog.go)

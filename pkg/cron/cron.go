@@ -17,6 +17,7 @@ type Job struct {
 
 type JobFunc func(time.Time)
 
+// TODO: move to database
 var jobs = make(map[string]*Job)
 var mu sync.Mutex
 

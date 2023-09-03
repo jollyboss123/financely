@@ -58,6 +58,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.CurrencyID = cID
+	//TODO: get user base currency
 	request.BaseCurrencyCode = "MYR"
 	request.BaseCurrencyID, err = h.currencyRepo.ReadByCode(r.Context(), request.BaseCurrencyCode)
 	if err != nil {
@@ -194,6 +195,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 		request.CurrencyID = cID
 	}
+	//TODO: get user base currency
 	request.BaseCurrencyCode = "MYR"
 	request.BaseCurrencyID, err = h.currencyRepo.ReadByCode(r.Context(), request.BaseCurrencyCode)
 	if err != nil {
@@ -272,6 +274,7 @@ func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO: get user base currency
 	baseCC := "MYR"
 
 	er, err := h.exchangeRate.ComputeRate(r.Context(), baseCC, filters.Currency)
@@ -305,6 +308,7 @@ func (h *Handler) Average(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO: get user base currency
 	baseCC := "MYR"
 
 	er, err := h.exchangeRate.ComputeRate(r.Context(), baseCC, filters.Currency)
