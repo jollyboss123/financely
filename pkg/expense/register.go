@@ -18,6 +18,7 @@ func SetupRoutes(l *logger.Logger, router *chi.Mux, validator *validator.Validat
 		r.Put("/{expenseID}", h.Update)
 		r.Delete("/{expenseID}", h.Delete)
 		r.Get("/total", h.Total)
+		r.Get("/average", h.Average)
 	})
 	return h
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
 	"github.com/shopspring/decimal"
 	"net/http"
+	"strings"
 )
 
 type Handler struct {
@@ -259,6 +260,9 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 	filters := Filters(r.URL.Query())
+	if filters.Currency != "" {
+		filters.Currency = strings.ToUpper(filters.Currency)
+	}
 	var total int64
 
 	total, err := h.expenseRepo.Total(r.Context(), filters)
@@ -267,7 +271,55 @@ func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 		response.Error(h.logger, w, http.StatusInternalServerError, err)
 		return
 	}
+
+	baseCC := "MYR"
+
+	er, err := h.exchangeRate.ComputeRate(r.Context(), baseCC, filters.Currency)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get exchange rate")
+		response.Error(h.logger, w, http.StatusInternalServerError, err)
+		return
+	}
+
+	amountDec := decimal.NewFromInt(total)
+	rateDec := decimal.NewFromFloat(er)
+	resultDec := amountDec.Mul(rateDec)
+	total = resultDec.IntPart()
+
 	response.Json(h.logger, w, http.StatusOK, map[string]int64{
 		"total": total,
+	})
+}
+
+func (h *Handler) Average(w http.ResponseWriter, r *http.Request) {
+	filters := Filters(r.URL.Query())
+	if filters.Currency != "" {
+		filters.Currency = strings.ToUpper(filters.Currency)
+	}
+	var avg int64
+
+	avg, err := h.expenseRepo.Average(r.Context(), filters)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get average expense")
+		response.Error(h.logger, w, http.StatusInternalServerError, err)
+		return
+	}
+
+	baseCC := "MYR"
+
+	er, err := h.exchangeRate.ComputeRate(r.Context(), baseCC, filters.Currency)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed to get exchange rate")
+		response.Error(h.logger, w, http.StatusInternalServerError, err)
+		return
+	}
+
+	amountDec := decimal.NewFromInt(avg)
+	rateDec := decimal.NewFromFloat(er)
+	resultDec := amountDec.Mul(rateDec)
+	avg = resultDec.IntPart()
+
+	response.Json(h.logger, w, http.StatusOK, map[string]int64{
+		"average": avg,
 	})
 }

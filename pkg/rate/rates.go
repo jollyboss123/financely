@@ -4,16 +4,21 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"net/http"
 	"strconv"
 )
 
 type ExchangeRates struct {
+	logger   *logger.Logger
 	rateRepo Rate
 }
 
-func NewExchangeRates(rateRepo Rate) *ExchangeRates {
-	return &ExchangeRates{rateRepo: rateRepo}
+func NewExchangeRates(logger *logger.Logger, rateRepo Rate) *ExchangeRates {
+	return &ExchangeRates{
+		logger:   logger,
+		rateRepo: rateRepo,
+	}
 }
 
 func (er *ExchangeRates) ComputeRate(ctx context.Context, base, dest string) (float64, error) {
@@ -51,13 +56,13 @@ func (er *ExchangeRates) FetchRates(ctx context.Context) error {
 
 		r, err := strconv.ParseFloat(c.Rate, 64)
 		if err != nil {
-			fmt.Println("Error in ParseFloat:", err)
+			er.logger.Error().Err(err).Msg("failed to parse float")
 			return err
 		}
 
 		err = er.rateRepo.Create(ctx, "EUR", c.Currency, r)
 		if err != nil {
-			fmt.Println("Error in Create:", err)
+			er.logger.Error().Err(err).Msg("failed to create rate")
 			return err
 		}
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
+	"github.com/shopspring/decimal"
 	"strings"
 )
 
@@ -19,6 +20,7 @@ type Expense interface {
 	Delete(ctx context.Context, expenseID uuid.UUID) error
 	Total(ctx context.Context, filter *Filter) (int64, error)
 	Search(ctx context.Context, filter *Filter) ([]*Schema, error)
+	Average(ctx context.Context, filter *Filter) (int64, error)
 }
 
 type expenseRepository struct {
@@ -37,9 +39,10 @@ set title = $1, amount_ud = $2, currency_id_ud = $3, currency_code_ud = $4,
 amount_base = $5, currency_id_base = $6, currency_code_base = $7, transaction_date = $8 
 where id = $9 
 returning id`
-	DeleteExpenseByID     = "delete from expenses where id = $1 returning id"
-	TotalExpensesDynamic  = "select COALESCE(sum(amount_base), 0) from expenses where "
-	SearchExpensesDynamic = "select * from expenses where title like '%' || $1 || '%' "
+	DeleteExpenseByID      = "delete from expenses where id = $1 returning id"
+	TotalExpensesDynamic   = "select coalesce(sum(amount_base), 0) from expenses where "
+	SearchExpensesDynamic  = "select * from expenses where title like '%' || $1 || '%' "
+	AverageExpensesDynamic = "select coalesce(avg(amount_base), 0) from expenses where "
 )
 
 var (
@@ -220,4 +223,45 @@ func (er *expenseRepository) Search(ctx context.Context, filter *Filter) ([]*Sch
 	}
 
 	return expenses, nil
+}
+
+func (er *expenseRepository) Average(ctx context.Context, filter *Filter) (int64, error) {
+	if filter == nil {
+		return 0, errors.New("filter cannot be nil")
+	}
+
+	var clauses []string
+	var sqlParams []interface{}
+	paramCounter := 0
+
+	if filter.Year == "" && filter.Month == "" && filter.Day == "" {
+		clauses = append(clauses, "transaction_date::date = current_date")
+	} else {
+		dateFilters := []struct {
+			Field  string
+			Column string
+		}{
+			{filter.Year, "year"},
+			{filter.Month, "month"},
+			{filter.Day, "day"},
+		}
+
+		for _, dateFilter := range dateFilters {
+			if dateFilter.Field != "" {
+				paramCounter++
+				clause := fmt.Sprintf("extract(%s from transaction_date) = $%d", dateFilter.Column, paramCounter)
+				clauses = append(clauses, clause)
+				sqlParams = append(sqlParams, dateFilter.Field)
+			}
+		}
+	}
+
+	baseQuery := AverageExpensesDynamic + strings.Join(clauses, " and ")
+
+	var avg decimal.Decimal
+	err := er.db.GetContext(ctx, &avg, baseQuery, sqlParams...)
+	if err != nil {
+		return 0, err
+	}
+	return avg.IntPart(), nil
 }

@@ -61,6 +61,10 @@ GET https://0.0.0.0:8081/api/v1/expense/total?year=2023&month=7
 Accept: application/json
 
 ### total expenses by default return today's total
-GET https://0.0.0.0:8081/api/v1/expense/total
+GET https://0.0.0.0:8081/api/v1/expense/total?currency=myr
+Accept: application/json
+
+### average expenses by default return today's average
+GET https://0.0.0.0:8081/api/v1/expense/average?currency=myr
 Accept: application/json
 

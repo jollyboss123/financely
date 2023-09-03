@@ -12,7 +12,7 @@ type Filter struct {
 	Year       string `json:"year"`
 	Month      string `json:"month"`
 	Day        string `json:"day"`
-	Base       string `json:"base"`
+	Currency   string `json:"currency"`
 }
 
 func Filters(queries url.Values) *Filter {
@@ -26,7 +26,7 @@ func Filters(queries url.Values) *Filter {
 		fallthrough
 	case queries.Has("day"):
 		fallthrough
-	case queries.Has("base"):
+	case queries.Has("currency"):
 		p.Search = true
 	}
 
@@ -37,6 +37,6 @@ func Filters(queries url.Values) *Filter {
 		Year:       queries.Get("year"),
 		Month:      queries.Get("month"),
 		Day:        queries.Get("day"),
-		Base:       queries.Get("base"),
+		Currency:   queries.Get("currency"),
 	}
 }
