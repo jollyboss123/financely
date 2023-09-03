@@ -9,17 +9,20 @@ import (
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Handler struct {
 	rateRepo  Rate
 	validator *validator.Validate
+	rates     *ExchangeRates
 }
 
-func NewHandler(rateRepo Rate, validator *validator.Validate) *Handler {
+func NewHandler(rateRepo Rate, validator *validator.Validate, rates *ExchangeRates) *Handler {
 	return &Handler{
 		rateRepo:  rateRepo,
 		validator: validator,
+		rates:     rates,
 	}
 }
 
@@ -37,11 +40,12 @@ func (h *Handler) Reschedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//cancel existing cron
+	cron.Cancel("fetch.exchange-rates")
 
-	//run new cron
-	for t := range cron.Cron(context.Background(), ur.startTime, ur.delay) {
-
-		log.Println(t.Format("2006-01-02 15:04:05"))
+	jobFunc := func(t time.Time) {
+		h.rates.GetRatesRemote(context.Background())
 	}
+
+	jobID := cron.Start("fetch.exchange-rates", ur.startTime, ur.delay, jobFunc)
+	log.Printf("started new cron job: %s\n", jobID)
 }

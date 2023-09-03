@@ -7,6 +7,9 @@ import (
 	"github.com/jollyboss123/finance-tracker/pkg/cron"
 	"github.com/jollyboss123/finance-tracker/pkg/rate"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -15,6 +18,7 @@ func main() {
 	store := database.New(cfg.Database)
 	newRateRepo := rate.New(store)
 	r := rate.NewExchangeRates(newRateRepo)
+	ctx := context.Background()
 
 	startTime, err := time.Parse("2006-01-02 15:04:05", "2023-09-02 13:30:00")
 	if err != nil {
@@ -22,8 +26,22 @@ func main() {
 	}
 	delay := time.Minute
 
-	for t := range cron.Cron(context.Background(), startTime, delay) {
-		r.GetRatesRemote(context.Background())
-		log.Printf("cron run at %v", t.Format("2006-01-02 15:04:05"))
+	jobFunc := func(t time.Time) {
+		r.GetRatesRemote(ctx)
 	}
+
+	jobID := cron.Start("fetch.exchange-rates", startTime, delay, jobFunc)
+	log.Printf("started cron job: %s\n", jobID)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	<-quit
+
+	log.Println("Shutting down...")
+
+	_, shutdown := context.WithTimeout(ctx, cfg.Api.GracefulTimeout*time.Second)
+	defer shutdown()
+
+	store.Close()
 }

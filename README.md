@@ -1,5 +1,5 @@
 # Financely
-A one-stop Finance tracker
+A one-stop personal finance tracker
 
 ### Reference Documentation
 
@@ -8,7 +8,7 @@ A one-stop Finance tracker
 * [How to correctly use context.Context in Go 1.7](https://medium.com/@cep21/how-to-correctly-use-context-context-in-go-1-7-8f2c0fafdf39)
 * [Dynamic SQL select query in Golang](https://stackoverflow.com/questions/55368105/dynamic-sql-select-query-in-golang)
 * [Best practices for building an application with Azure Database for PostgreSQL single server](https://learn.microsoft.com/en-us/azure/postgresql/single-server/application-best-practices) 
-* Handling currencies with int64
+* Handling currencies with `int64`
   * [Stripe](https://stripe.com/docs/api/prices/create#create_price-unit_amount)
   * [Adyen](https://docs.adyen.com/api-explorer/Checkout/70/post/payments#request-additionalAmount-value)
   * [Square](https://developer.squareup.com/reference/square/objects/Money)

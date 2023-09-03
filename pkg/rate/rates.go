@@ -40,8 +40,6 @@ func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
 	md := &Cubes{}
 	xml.NewDecoder(resp.Body).Decode(&md)
 	for _, c := range md.CubeData {
-		fmt.Println("Processing currency:", c.Currency)
-
 		curr := c.Currency
 		if curr != "USD" && curr != "JPY" && curr != "MYR" && curr != "SGD" &&
 			curr != "AUD" && curr != "CAD" && curr != "CNY" && curr != "EUR" &&
