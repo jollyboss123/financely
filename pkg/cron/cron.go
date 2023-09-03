@@ -2,6 +2,7 @@ package cron
 
 import (
 	"context"
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -19,7 +20,15 @@ type JobFunc func(time.Time)
 var jobs = make(map[string]*Job)
 var mu sync.Mutex
 
-func Start(jobID string, startTime time.Time, delay time.Duration, jobFunc JobFunc) string {
+func Start(jobID string, startTime time.Time, delay time.Duration, jobFunc JobFunc) (string, error) {
+	mu.Lock()
+	_, exists := jobs[jobID]
+	mu.Unlock()
+
+	if exists {
+		return "", errors.New("job id already exists")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	job := &Job{
@@ -40,7 +49,7 @@ func Start(jobID string, startTime time.Time, delay time.Duration, jobFunc JobFu
 		}
 	}()
 
-	return jobID
+	return jobID, nil
 }
 
 func Cancel(jobID string) {

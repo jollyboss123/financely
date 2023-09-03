@@ -46,6 +46,9 @@ func (h *Handler) Reschedule(w http.ResponseWriter, r *http.Request) {
 		h.rates.GetRatesRemote(context.Background())
 	}
 
-	jobID := cron.Start("fetch.exchange-rates", ur.startTime, ur.delay, jobFunc)
+	jobID, err := cron.Start("fetch.exchange-rates", ur.startTime, ur.delay, jobFunc)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+	}
 	log.Printf("started new cron job: %s\n", jobID)
 }

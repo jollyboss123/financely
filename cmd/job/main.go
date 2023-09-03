@@ -22,7 +22,7 @@ func main() {
 
 	startTime, err := time.Parse("2006-01-02 15:04:05", "2023-09-02 13:30:00")
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	delay := time.Minute
 
@@ -30,7 +30,10 @@ func main() {
 		r.GetRatesRemote(ctx)
 	}
 
-	jobID := cron.Start("fetch.exchange-rates", startTime, delay, jobFunc)
+	jobID, err := cron.Start("fetch.exchange-rates", startTime, delay, jobFunc)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	log.Printf("started cron job: %s\n", jobID)
 
 	quit := make(chan os.Signal, 1)
