@@ -39,9 +39,10 @@ set title = $1, amount_ud = $2, currency_id_ud = $3, currency_code_ud = $4,
 amount_base = $5, currency_id_base = $6, currency_code_base = $7, transaction_date = $8 
 where id = $9 
 returning id`
-	DeleteExpenseByID      = "delete from expenses where id = $1 returning id"
-	TotalExpensesDynamic   = "select coalesce(sum(amount_base), 0) from expenses where "
-	SearchExpensesDynamic  = "select * from expenses where title like '%' || $1 || '%' "
+	DeleteExpenseByID     = "delete from expenses where id = $1 returning id"
+	TotalExpensesDynamic  = "select coalesce(sum(amount_base), 0) from expenses where "
+	SearchExpensesDynamic = `select * from expenses where soundex(title) = soundex($1)
+or levenshtein(title, $1) < 3 `
 	AverageExpensesDynamic = "select coalesce(avg(amount_base), 0) from expenses where "
 )
 

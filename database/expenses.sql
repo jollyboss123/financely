@@ -1,5 +1,6 @@
 -- Enable pgcrypto for UUID support.
 create extension if not exists pgcrypto;
+create extension fuzzystrmatch;
 
 create table if not exists expenses (
     id uuid default gen_random_uuid() primary key,
@@ -17,4 +18,5 @@ create table if not exists expenses (
 comment on table expenses is 'This table stores all users expenses.';
 create index if not exists idx_currency_id_loc on expenses (currency_id_ud);
 create index if not exists idx_currency_id_base on expenses (currency_id_base);
+create index if not exists idx_sdx_title on expenses (soundex(title));
 

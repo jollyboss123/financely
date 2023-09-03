@@ -19,7 +19,7 @@ GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5
 Accept: application/json
 
 ### list of paginated expenses with search
-GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&title=Test
+GET https://0.0.0.0:8081/api/v1/expense?page=1&size=5&title=tes
 Accept: application/json
 
 ### list of paginated expenses filter by date
