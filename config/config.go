@@ -10,6 +10,7 @@ type Config struct {
 	Cors
 	Tls
 
+	Cron
 	Database
 }
 
@@ -23,6 +24,7 @@ func New() *Config {
 		Api:      API(),
 		Cors:     NewCors(),
 		Tls:      TLS(),
+		Cron:     CRON(),
 		Database: DataStore(),
 	}
 }

@@ -48,5 +48,5 @@ func (s *Server) initCurrency() {
 func (s *Server) initRate() {
 	newRateRepo := rate.New(s.db)
 	r := rate.NewExchangeRates(newRateRepo)
-	rate.SetupRoutes(s.router, s.validator, newRateRepo, r)
+	rate.SetupRoutes(s.router, s.validator, newRateRepo, r, s.cfg)
 }

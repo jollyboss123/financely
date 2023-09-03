@@ -26,6 +26,7 @@ func (er *ExchangeRates) GetRate(ctx context.Context, base, dest string) (s.Deci
 }
 
 func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
+	//TODO: change to call https://exchangeratesapi.io
 	resp, err := http.DefaultClient.Get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
 
 	if err != nil {
@@ -60,8 +61,6 @@ func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
 			return err
 		}
 	}
-
-	//e.rates["EUR"] = 1
 
 	return nil
 }
