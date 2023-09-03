@@ -37,18 +37,18 @@ Content-Type: application/json
 {
   "title": "Test",
   "amount": 200,
-  "currency_code": "MYR",
-  "transaction_date": "2023-09-02T15:04:05.123499999Z"
+  "currency_code": "USD",
+  "transaction_date": "2023-09-03T15:04:05.123499999Z"
 }
 
 ### edit an expense
-PUT https://0.0.0.0:8081/api/v1/expense/3
+PUT https://0.0.0.0:8081/api/v1/expense/6ca8af0c-9446-4371-8d48-86db80bf44f2
 Content-Type: application/json
 
 {
   "title": "Test",
   "amount": 200,
-  "currency_code": "USD",
+  "currency_code": "MYR",
   "transaction_date": "2023-09-01T15:04:05.123499999Z"
 }
 

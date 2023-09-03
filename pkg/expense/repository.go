@@ -17,7 +17,7 @@ type Expense interface {
 	Read(ctx context.Context, expenseID uuid.UUID) (*Schema, error)
 	Update(ctx context.Context, request *UpdateRequest) error
 	Delete(ctx context.Context, expenseID uuid.UUID) error
-	Total(ctx context.Context, filter *Filter) (uint64, error)
+	Total(ctx context.Context, filter *Filter) (int64, error)
 	Search(ctx context.Context, filter *Filter) ([]*Schema, error)
 }
 
@@ -26,14 +26,20 @@ type expenseRepository struct {
 }
 
 const (
-	InsertIntoExpenses         = "insert into expenses (title, amount, currency_id, transaction_date) values ($1, $2, $3, $4) returning id"
+	InsertIntoExpenses = `insert into expenses 
+(title, amount_ud, currency_id_ud, currency_code_ud, amount_base, currency_id_base, currency_code_base, transaction_date) 
+values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`
 	SelectFromExpenses         = "select * from expenses order by transaction_date desc"
 	SelectFromExpensesPaginate = "select * from expenses order by transaction_date desc limit $1 offset $2"
 	SelectExpenseByID          = "select * from expenses where id = $1"
-	UpdateExpense              = "update expenses set title = $1, amount = $2, currency_id = $3, transaction_date = $3 where id = $4 returning id"
-	DeleteExpenseByID          = "delete from expenses where id = $1 returning id"
-	TotalExpensesDynamic       = "select COALESCE(sum(amount), 0) from expenses where "
-	SearchExpensesDynamic      = "select * from expenses where title like '%' || $1 || '%' "
+	UpdateExpense              = `update expenses 
+set title = $1, amount_ud = $2, currency_id_ud = $3, currency_code_ud = $4, 
+amount_base = $5, currency_id_base = $6, currency_code_base = $7, transaction_date = $8 
+where id = $9 
+returning id`
+	DeleteExpenseByID     = "delete from expenses where id = $1 returning id"
+	TotalExpensesDynamic  = "select COALESCE(sum(amount_base), 0) from expenses where "
+	SearchExpensesDynamic = "select * from expenses where title like '%' || $1 || '%' "
 )
 
 var (
@@ -45,7 +51,15 @@ func New(db *sqlx.DB) *expenseRepository {
 }
 
 func (er *expenseRepository) Create(ctx context.Context, request *CreateRequest) (expenseId uuid.UUID, err error) {
-	if err = er.db.QueryRowContext(ctx, InsertIntoExpenses, request.Title, request.Amount, request.CurrencyID, request.TransactionDate).Scan(&expenseId); err != nil {
+	if err = er.db.QueryRowContext(ctx, InsertIntoExpenses,
+		request.Title,
+		request.Amount,
+		request.CurrencyID,
+		request.CurrencyCode,
+		request.BaseAmount,
+		request.BaseCurrencyID,
+		request.BaseCurrencyCode,
+		request.TransactionDate).Scan(&expenseId); err != nil {
 		return uuid.Nil, errors.New("repository.Expense.Create")
 	}
 
@@ -87,7 +101,16 @@ func (er *expenseRepository) Read(ctx context.Context, expenseID uuid.UUID) (*Sc
 func (er *expenseRepository) Update(ctx context.Context, request *UpdateRequest) error {
 	var returnedID uuid.UUID
 
-	err := er.db.QueryRowContext(ctx, UpdateExpense, request.Title, request.Amount, request.CurrencyID, request.TransactionDate, request.ID).Scan(&returnedID)
+	err := er.db.QueryRowContext(ctx, UpdateExpense,
+		request.Title,
+		request.Amount,
+		request.CurrencyID,
+		request.CurrencyCode,
+		request.BaseAmount,
+		request.BaseCurrencyID,
+		request.BaseCurrencyCode,
+		request.TransactionDate,
+		request.ID).Scan(&returnedID)
 	if err != nil {
 		return err
 	}
@@ -114,7 +137,7 @@ func (er *expenseRepository) Delete(ctx context.Context, expenseID uuid.UUID) er
 	return nil
 }
 
-func (er *expenseRepository) Total(ctx context.Context, filter *Filter) (uint64, error) {
+func (er *expenseRepository) Total(ctx context.Context, filter *Filter) (int64, error) {
 	if filter == nil {
 		return 0, errors.New("filter cannot be nil")
 	}
@@ -147,7 +170,7 @@ func (er *expenseRepository) Total(ctx context.Context, filter *Filter) (uint64,
 
 	baseQuery := TotalExpensesDynamic + strings.Join(clauses, " and ")
 
-	var total uint64
+	var total int64
 	err := er.db.GetContext(ctx, &total, baseQuery, sqlParams...)
 	if err != nil {
 		return 0, err

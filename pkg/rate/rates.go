@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
-	s "github.com/shopspring/decimal"
 	"net/http"
 	"strconv"
 )
@@ -17,12 +16,13 @@ func NewExchangeRates(rateRepo Rate) *ExchangeRates {
 	return &ExchangeRates{rateRepo: rateRepo}
 }
 
-func (er *ExchangeRates) GetRate(ctx context.Context, base, dest string) (s.Decimal, error) {
-	r, err := er.rateRepo.Read(ctx, base, dest)
+func (er *ExchangeRates) GetRate(ctx context.Context, base, dest string) (float64, error) {
+	br, err := er.rateRepo.Read(ctx, base)
+	dr, err := er.rateRepo.Read(ctx, dest)
 	if err != nil {
-		return s.Decimal{}, err
+		return 0, err
 	}
-	return r, nil
+	return dr / br, nil
 }
 
 func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
@@ -38,7 +38,7 @@ func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 
-	md := &Cubes{}
+	md := &cubes{}
 	xml.NewDecoder(resp.Body).Decode(&md)
 	for _, c := range md.CubeData {
 		curr := c.Currency
@@ -65,11 +65,11 @@ func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
 	return nil
 }
 
-type Cubes struct {
-	CubeData []Cube `xml:"Cube>Cube>Cube"`
+type cubes struct {
+	CubeData []cube `xml:"Cube>Cube>Cube"`
 }
 
-type Cube struct {
+type cube struct {
 	Currency string `xml:"currency,attr"`
 	Rate     string `xml:"rate,attr"`
 }

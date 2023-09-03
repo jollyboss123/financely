@@ -37,7 +37,9 @@ func (s *Server) initHealth() {
 func (s *Server) initExpense() {
 	newExpenseRepo := expense.New(s.db)
 	newCurrencyRepo := currency.New(s.db)
-	expense.SetupRoutes(s.router, s.validator, newExpenseRepo, newCurrencyRepo)
+	newRateRepo := rate.New(s.db)
+	er := rate.NewExchangeRates(newRateRepo)
+	expense.SetupRoutes(s.router, s.validator, newExpenseRepo, newCurrencyRepo, er)
 }
 
 func (s *Server) initCurrency() {

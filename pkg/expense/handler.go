@@ -8,22 +8,26 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jollyboss123/finance-tracker/pkg/currency"
+	"github.com/jollyboss123/finance-tracker/pkg/rate"
 	"github.com/jollyboss123/finance-tracker/pkg/server/message"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
+	"github.com/shopspring/decimal"
 	"net/http"
 )
 
 type Handler struct {
 	expenseRepo  Expense
 	currencyRepo currency.Currency
+	exchangeRate *rate.ExchangeRates
 	validator    *validator.Validate
 }
 
-func NewHandler(expenseRepo Expense, currencyRepo currency.Currency, validator *validator.Validate) *Handler {
+func NewHandler(expenseRepo Expense, currencyRepo currency.Currency, exchangeRate *rate.ExchangeRates, validator *validator.Validate) *Handler {
 	return &Handler{
 		expenseRepo:  expenseRepo,
 		currencyRepo: currencyRepo,
+		exchangeRate: exchangeRate,
 		validator:    validator,
 	}
 }
@@ -42,6 +46,22 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	request.CurrencyID = cID
+	request.BaseCurrencyCode = "MYR"
+	request.BaseCurrencyID, err = h.currencyRepo.ReadByCode(r.Context(), request.BaseCurrencyCode)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	er, err := h.exchangeRate.GetRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	amountDec := decimal.NewFromInt(request.Amount)
+	rateDec := decimal.NewFromFloat(er)
+	resultDec := amountDec.Mul(rateDec)
+	request.BaseAmount = resultDec.IntPart()
 
 	errs := validate.Validate(h.validator, request)
 	if errs != nil {
@@ -125,7 +145,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
-	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
+	expenseID, err := uuid.Parse(chi.URLParam(r, "expenseID"))
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, message.ErrBadRequest)
 		return
@@ -146,6 +166,22 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 		request.CurrencyID = cID
 	}
+	request.BaseCurrencyCode = "MYR"
+	request.BaseCurrencyID, err = h.currencyRepo.ReadByCode(r.Context(), request.BaseCurrencyCode)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	er, err := h.exchangeRate.GetRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+	amountDec := decimal.NewFromInt(request.Amount)
+	rateDec := decimal.NewFromFloat(er)
+	resultDec := amountDec.Mul(rateDec)
+	request.BaseAmount = resultDec.IntPart()
 
 	errs := validate.Validate(h.validator, request)
 	if errs != nil {
@@ -170,7 +206,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
-	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
+	expenseID, err := uuid.Parse(chi.URLParam(r, "expenseID"))
 	if err != nil {
 		response.Error(w, http.StatusBadRequest, err)
 		return
@@ -187,14 +223,14 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 	filters := Filters(r.URL.Query())
-	var total uint64
+	var total int64
 
 	total, err := h.expenseRepo.Total(r.Context(), filters)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err)
 		return
 	}
-	response.Json(w, http.StatusOK, map[string]uint64{
+	response.Json(w, http.StatusOK, map[string]int64{
 		"total": total,
 	})
 }

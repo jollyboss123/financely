@@ -8,7 +8,8 @@ import (
 type Res struct {
 	ID              uuid.UUID `json:"id"`
 	Title           string    `json:"title"`
-	Amount          uint64    `json:"amount"`
+	Amount          int64     `json:"amount"`
+	CurrencyCode    string    `json:"currency_code"`
 	TransactionDate time.Time `json:"transaction_date"`
 }
 
@@ -20,6 +21,7 @@ func Resource(expense *Schema) *Res {
 		ID:              expense.ID,
 		Title:           expense.Title,
 		Amount:          expense.Amount,
+		CurrencyCode:    expense.CurrencyCode,
 		TransactionDate: expense.TransactionDate,
 	}
 
