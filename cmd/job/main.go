@@ -28,7 +28,7 @@ func main() {
 	delay := cfg.Cron.ExchangeRatesDelay
 
 	jobFunc := func(t time.Time) {
-		r.GetRatesRemote(ctx)
+		r.FetchRates(ctx)
 	}
 
 	jobID, err := cron.Start(l, cfg.Cron.ExchangeRatesJobID, startTime, delay, jobFunc)

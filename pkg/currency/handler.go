@@ -63,7 +63,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	response.Json(h.logger, w, http.StatusCreated, curr)
 }
 
-func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Fetch(w http.ResponseWriter, r *http.Request) {
 	cID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to decode currencyID")

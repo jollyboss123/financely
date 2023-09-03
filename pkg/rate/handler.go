@@ -51,7 +51,7 @@ func (h *Handler) Reschedule(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info().Str("id", h.cfg.Cron.ExchangeRatesJobID).Msg("cancelled")
 
 	jobFunc := func(t time.Time) {
-		h.rates.GetRatesRemote(context.Background())
+		h.rates.FetchRates(context.Background())
 	}
 
 	jobID, err := cron.Start(h.logger, h.cfg.Cron.ExchangeRatesJobID, ur.startTime, ur.delay, jobFunc)

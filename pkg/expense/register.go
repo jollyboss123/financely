@@ -13,7 +13,7 @@ func SetupRoutes(l *logger.Logger, router *chi.Mux, validator *validator.Validat
 
 	router.Route("/api/v1/expense", func(r chi.Router) {
 		r.Get("/", h.List)
-		r.Get("/{expenseID}", h.Get)
+		r.Get("/{expenseID}", h.Fetch)
 		r.Post("/", h.Create)
 		r.Put("/{expenseID}", h.Update)
 		r.Delete("/{expenseID}", h.Delete)

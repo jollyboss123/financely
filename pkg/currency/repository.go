@@ -94,7 +94,7 @@ func (cr *currencyRepository) ReadByCode(ctx context.Context, code string) (uuid
 	var cID uuid.UUID
 	err := cr.db.QueryRowContext(ctx, SelectCurrencyByCode, strings.ToUpper(code)).Scan(&cID)
 	if err != nil {
-		return uuid.Nil, errors.New("repository.Currency.Read")
+		return uuid.Nil, errors.New("repository.Currency.Fetch")
 	}
 	return cID, nil
 }

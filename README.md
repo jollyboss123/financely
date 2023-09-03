@@ -15,3 +15,4 @@ A one-stop personal finance tracker
 * [ISO 4217 currency codes](https://www.iso.org/iso-4217-currency-codes.html)
 * [Currency format](https://github.com/xsolla/currency-format)
 * [How to schedule task at a specific time in Go](https://stephenafamo.com/blog/posts/how-to-schedule-task-at-specific-time-in-go)
+* [Google Go Style Decisions](https://google.github.io/styleguide/go/decisions.html)

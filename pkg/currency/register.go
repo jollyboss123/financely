@@ -11,7 +11,7 @@ func SetupRoutes(l *logger.Logger, router *chi.Mux, validator *validator.Validat
 
 	router.Route("/api/v1/currency", func(r chi.Router) {
 		r.Get("/", h.List)
-		r.Get("/{currencyID}", h.Get)
+		r.Get("/{currencyID}", h.Fetch)
 		r.Post("/", h.Create)
 		r.Put("/{currencyID}", h.Update)
 		r.Delete("/{currencyID}", h.Delete)

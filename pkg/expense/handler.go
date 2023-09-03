@@ -65,7 +65,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	er, err := h.exchangeRate.GetRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
+	er, err := h.exchangeRate.ComputeRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to get exchange rate")
 		response.Error(h.logger, w, http.StatusInternalServerError, err)
@@ -102,7 +102,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	response.Json(h.logger, w, http.StatusCreated, e)
 }
 
-func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Fetch(w http.ResponseWriter, r *http.Request) {
 	expenseID, err := uuid.Parse(chi.URLParam(r, "currencyID"))
 	if err != nil {
 		h.logger.Error().Err(err).Msg("failed to parse currencyID")
@@ -201,7 +201,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	er, err := h.exchangeRate.GetRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
+	er, err := h.exchangeRate.ComputeRate(r.Context(), request.CurrencyCode, request.BaseCurrencyCode)
 	if err != nil {
 		h.logger.Error().Str("id", request.ID.String()).Err(err).Msg("failed to get exchange rate")
 		response.Error(h.logger, w, http.StatusInternalServerError, err)

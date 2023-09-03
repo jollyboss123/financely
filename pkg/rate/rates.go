@@ -16,7 +16,7 @@ func NewExchangeRates(rateRepo Rate) *ExchangeRates {
 	return &ExchangeRates{rateRepo: rateRepo}
 }
 
-func (er *ExchangeRates) GetRate(ctx context.Context, base, dest string) (float64, error) {
+func (er *ExchangeRates) ComputeRate(ctx context.Context, base, dest string) (float64, error) {
 	br, err := er.rateRepo.Read(ctx, base)
 	dr, err := er.rateRepo.Read(ctx, dest)
 	if err != nil {
@@ -25,7 +25,7 @@ func (er *ExchangeRates) GetRate(ctx context.Context, base, dest string) (float6
 	return dr / br, nil
 }
 
-func (er *ExchangeRates) GetRatesRemote(ctx context.Context) error {
+func (er *ExchangeRates) FetchRates(ctx context.Context) error {
 	//TODO: change to call https://exchangeratesapi.io
 	resp, err := http.DefaultClient.Get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
 
