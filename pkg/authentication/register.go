@@ -19,5 +19,6 @@ func SetupRoutes(l *logger.Logger, router *chi.Mux, validator *validator.Validat
 		r.Get("/csrf", h.Csrf)
 		r.Get("/", h.Protected)
 		r.Get("/me", h.Me)
+		r.Post("/logout", h.Logout)
 	})
 }

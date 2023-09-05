@@ -164,7 +164,7 @@ func (s *Server) setGlobalMiddleware() {
 	s.router.Use(middleware.Json)
 	s.router.Use(middleware.LoadAndSave(s.session))
 	if s.cfg.Api.RequestLog {
-		s.router.Use(middleware.RequestLog(s.l))
+		s.router.Use(middleware.RequestLog(s.l, s.session))
 	}
 }
 

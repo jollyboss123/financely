@@ -2,19 +2,20 @@ package middleware
 
 import (
 	"github.com/jollyboss123/finance-tracker/pkg/logger"
+	"github.com/jollyboss123/scs/v2"
 	"io"
 	"net"
 	"net/http"
 	"time"
 )
 
-func RequestLog(l *logger.Logger) func(http.Handler) http.Handler {
+func RequestLog(l *logger.Logger, s *scs.SessionManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
 			le := &logEntry{
-				UserID:            getUserID(r),
+				UserID:            getUserID(r, s),
 				ReceivedTime:      start,
 				RequestMethod:     r.Method,
 				RequestURL:        r.URL.String(),
@@ -50,7 +51,7 @@ func RequestLog(l *logger.Logger) func(http.Handler) http.Handler {
 			le.ResponseHeaderSize, le.ResponseBodySize = w2.size()
 
 			l.Info().
-				Str("userID", le.UserID.String()).
+				Str("userID", le.UserID).
 				Time("received_time", le.ReceivedTime).
 				Str("method", le.RequestMethod).
 				Str("url", le.RequestURL).

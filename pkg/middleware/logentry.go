@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"github.com/google/uuid"
+	"github.com/jollyboss123/scs/v2"
 	"io"
 	"net"
 	"net/http"
@@ -10,7 +10,7 @@ import (
 )
 
 type logEntry struct {
-	UserID            uuid.UUID
+	UserID            string
 	ReceivedTime      time.Time
 	RequestMethod     string
 	RequestURL        string
@@ -29,12 +29,12 @@ type logEntry struct {
 	Latency            time.Duration
 }
 
-func getUserID(r *http.Request) uuid.UUID {
-	userID, ok := r.Context().Value(KeyID).(uuid.UUID)
-	if !ok {
-		return uuid.Nil
+func getUserID(r *http.Request, s *scs.SessionManager) string {
+	userID := s.Get(r.Context(), string(KeyID))
+	if userID == nil {
+		return ""
 	}
-	return userID
+	return userID.(string)
 }
 
 func ipFromHostPort(hp string) string {

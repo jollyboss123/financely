@@ -129,9 +129,16 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	ok, err := h.repo.Logout(r.Context(), currUser.(uuid.UUID))
+	userID, err := uuid.Parse(currUser.(string))
 	if err != nil {
+		h.logger.Error().Err(err).Msg("failed parse userID")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ok, err := h.repo.Logout(r.Context(), userID)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("failed logout")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -30,7 +30,11 @@ Content-Type: application/json
 
 ### me
 GET https://0.0.0.0:8081/api/v1/restricted/me
-Cookie: session=OI9xh0IhnmI8KaTowW_THdnO0CqE1WP0N4bbydiR4ss;
+Cookie: session=LHFox6KTR2UgMvl8k__qxDpz-Swfj_SdJUY-e4Vop2g;
+
+### logout
+POST https://0.0.0.0:8081/api/v1/restricted/logout
+Cookie: session=6i1oFwOeiek0CwifIZCVY8iPERbVgvNRQgLqepBB8E8;
 
 ### list of expenses, by default gets the 1st 10 expenses ordered by trx date desc
 GET https://0.0.0.0:8081/api/v1/expense
