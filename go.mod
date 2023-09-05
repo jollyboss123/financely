@@ -3,13 +3,18 @@ module github.com/jollyboss123/finance-tracker
 go 1.21
 
 require (
+	github.com/alexedwards/argon2id v0.0.0-20230305115115-4b3c3280a736
+	github.com/alexedwards/scs/v2 v2.5.1
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-playground/validator/v10 v10.15.2
 	github.com/google/uuid v1.3.1
+	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.5.1
+	github.com/jollyboss123/scs/v2 v2.6.1
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/rs/cors v1.9.0
 	github.com/rs/zerolog v1.30.0

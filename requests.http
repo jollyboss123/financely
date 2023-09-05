@@ -10,6 +10,28 @@ Accept: application/json
 GET https://0.0.0.0:8081/api/health/readiness
 Accept: application/json
 
+### register
+POST https://0.0.0.0:8081/api/v1/register
+Content-Type: application/json
+
+{
+  "email": "test@gmail.com",
+  "password": "password"
+}
+
+### login
+POST https://0.0.0.0:8081/api/v1/login
+Content-Type: application/json
+
+{
+  "email": "test@gmail.com",
+  "password": "password"
+}
+
+### me
+GET https://0.0.0.0:8081/api/v1/restricted/me
+Cookie: session=OI9xh0IhnmI8KaTowW_THdnO0CqE1WP0N4bbydiR4ss;
+
 ### list of expenses, by default gets the 1st 10 expenses ordered by trx date desc
 GET https://0.0.0.0:8081/api/v1/expense
 Accept: application/json

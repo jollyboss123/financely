@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	chiMiddleware "github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -11,7 +10,8 @@ import (
 	"github.com/jollyboss123/finance-tracker/database"
 	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
-	"github.com/jollyboss123/finance-tracker/pkg/middleware/requestlog"
+	"github.com/jollyboss123/finance-tracker/pkg/postgresstore"
+	"github.com/jollyboss123/scs/v2"
 	"github.com/rs/cors"
 	"log"
 	"net/http"
@@ -32,6 +32,9 @@ type Server struct {
 	cors      *cors.Cors
 	tls       *tls.Config
 	router    *chi.Mux
+
+	session       *scs.SessionManager
+	sessionCloser *postgresstore.PostgresStore
 
 	httpServer *http.Server
 }
@@ -72,6 +75,7 @@ func (s *Server) Init() {
 	s.setTls()
 	s.NewDatabase()
 	s.newValidator()
+	s.newAuthentication()
 	s.newRouter()
 	s.setGlobalMiddleware()
 	s.InitDomains()
@@ -128,6 +132,24 @@ func (s *Server) newValidator() {
 	s.validator = validator.New()
 }
 
+func (s *Server) newAuthentication() {
+	manager := scs.New()
+	manager.Store = postgresstore.New(s.db.DB, s.l)
+	manager.CtxStore = postgresstore.New(s.db.DB, s.l)
+	manager.Lifetime = s.cfg.Session.Duration
+	manager.Cookie.Name = s.cfg.Session.Name
+	manager.Cookie.Domain = s.cfg.Session.Domain
+	manager.Cookie.HttpOnly = s.cfg.Session.HttpOnly
+	manager.Cookie.Path = s.cfg.Session.Path
+	manager.Cookie.Persist = true
+	manager.Cookie.SameSite = http.SameSite(s.cfg.Session.SameSite)
+	manager.Cookie.Secure = s.cfg.Session.Secure
+
+	s.sessionCloser = postgresstore.NewWithCleanupInterval(s.db.DB, s.l, 30*time.Minute)
+
+	s.session = manager
+}
+
 func (s *Server) newRouter() {
 	s.router = chi.NewRouter()
 }
@@ -140,8 +162,9 @@ func (s *Server) setGlobalMiddleware() {
 	})
 	s.router.Use(s.cors.Handler)
 	s.router.Use(middleware.Json)
+	s.router.Use(middleware.LoadAndSave(s.session))
 	if s.cfg.Api.RequestLog {
-		s.router.Use(chiMiddleware.Logger)
+		s.router.Use(middleware.RequestLog(s.l))
 	}
 }
 
@@ -169,7 +192,7 @@ func (s *Server) Config() *config.Config {
 
 func start(s *Server) {
 	s.l.Info().Msgf("Serving at %s:%s", s.cfg.Api.Host, s.cfg.Api.Port)
-	s.httpServer.Handler = requestlog.NewHandler(s.router.ServeHTTP, s.l)
+
 	err := s.httpServer.ListenAndServeTLS(s.cfg.Tls.CertFile, s.cfg.Tls.KeyFile)
 	if err != nil {
 		s.l.Error().Err(err).Msg("Error starting server")
@@ -192,11 +215,12 @@ func gracefulShutdown(ctx context.Context, s *Server) error {
 	if err != nil {
 		s.l.Err(err)
 	}
-	s.closeResources(ctx)
+	s.closeResources()
 
 	return nil
 }
 
-func (s *Server) closeResources(ctx context.Context) {
+func (s *Server) closeResources() {
 	_ = s.db.Close()
+	s.sessionCloser.StopCleanup()
 }

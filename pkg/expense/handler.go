@@ -289,8 +289,9 @@ func (h *Handler) Total(w http.ResponseWriter, r *http.Request) {
 	resultDec := amountDec.Mul(rateDec)
 	total = resultDec.IntPart()
 
-	response.Json(h.logger, w, http.StatusOK, map[string]int64{
-		"total": total,
+	response.Json(h.logger, w, http.StatusOK, &Money{
+		Amount:   total,
+		Currency: baseCC,
 	})
 }
 
@@ -323,7 +324,8 @@ func (h *Handler) Average(w http.ResponseWriter, r *http.Request) {
 	resultDec := amountDec.Mul(rateDec)
 	avg = resultDec.IntPart()
 
-	response.Json(h.logger, w, http.StatusOK, map[string]int64{
-		"average": avg,
+	response.Json(h.logger, w, http.StatusOK, &Money{
+		Amount:   avg,
+		Currency: baseCC,
 	})
 }

@@ -8,6 +8,7 @@ type Config struct {
 	Api
 	Cors
 	Tls
+	Session
 
 	Cron
 	Database
@@ -25,5 +26,6 @@ func New() *Config {
 		Tls:      TLS(),
 		Cron:     CRON(),
 		Database: DataStore(),
+		Session:  NewSession(),
 	}
 }

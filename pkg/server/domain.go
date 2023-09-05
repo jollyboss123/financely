@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/jollyboss123/finance-tracker/pkg/authentication"
 	"github.com/jollyboss123/finance-tracker/pkg/currency"
 	"github.com/jollyboss123/finance-tracker/pkg/expense"
 	"github.com/jollyboss123/finance-tracker/pkg/health"
@@ -15,6 +16,9 @@ func (s *Server) InitDomains() {
 	s.initVersion()
 	s.initHealth()
 	s.initExpense()
+	s.initCurrency()
+	s.initRate()
+	s.initAuthentication()
 }
 
 func (s *Server) initVersion() {
@@ -51,4 +55,9 @@ func (s *Server) initRate() {
 	newRateRepo := rate.New(s.db)
 	r := rate.NewExchangeRates(s.l, newRateRepo)
 	rate.SetupRoutes(s.l, s.router, s.validator, newRateRepo, r, s.cfg)
+}
+
+func (s *Server) initAuthentication() {
+	newUserRepo := authentication.New(s.db, s.session)
+	authentication.SetupRoutes(s.l, s.router, s.validator, s.session, newUserRepo)
 }

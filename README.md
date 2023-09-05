@@ -6,6 +6,7 @@ A one-stop personal finance tracker
 * [Go best practices, six years in](https://peter.bourgon.org/go-best-practices-2016/#logging-and-instrumentation)
 * [So you want to expose Go on the Internet](https://blog.cloudflare.com/exposing-go-on-the-internet/)
 * [Scripts to rule them all](https://github.blog/2015-06-30-scripts-to-rule-them-all/)
+* [go8](https://github.com/gmhafiz/go8)
 * [How to correctly use context.Context in Go 1.7](https://medium.com/@cep21/how-to-correctly-use-context-context-in-go-1-7-8f2c0fafdf39)
 * [Dynamic SQL select query in Golang](https://stackoverflow.com/questions/55368105/dynamic-sql-select-query-in-golang)
 * [Best practices for building an application with Azure Database for PostgreSQL single server](https://learn.microsoft.com/en-us/azure/postgresql/single-server/application-best-practices) 
@@ -23,3 +24,4 @@ A one-stop personal finance tracker
 * Implementing request logger
   * [Learning cloud native go - Adding Zerolog logger](https://learning-cloud-native-go.github.io/docs/adding-zerolog-logger/)
   * [The Go Cloud Development Kit (Go CDK)](https://github.com/google/go-cloud/blob/master/server/requestlog/requestlog.go)
+* [How to Parse a JSON Request Body in Go](https://www.alexedwards.net/blog/how-to-properly-parse-a-json-request-body)
