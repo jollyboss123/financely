@@ -50,6 +50,10 @@ func RequestLog(l *logger.Logger, s *scs.SessionManager) func(http.Handler) http
 			}
 			le.ResponseHeaderSize, le.ResponseBodySize = w2.size()
 
+			if le.UserID == "" {
+				le.UserID = getUserID(r, s)
+			}
+
 			l.Info().
 				Str("userID", le.UserID).
 				Time("received_time", le.ReceivedTime).

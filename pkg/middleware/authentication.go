@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/jollyboss123/scs/v2"
+	"log"
 	"net"
 	"net/http"
 	"time"
@@ -67,10 +68,17 @@ func LoadAndSave(s *scs.SessionManager) func(http.Handler) http.Handler {
 			}
 
 			var userID any
-			userID, ok := s.Get(ctx, string(KeyID)).(uuid.UUID)
-			if !ok {
+			log.Printf("auth userID: %s\n", s.Get(ctx, string(KeyID)))
+			id := s.Get(ctx, string(KeyID))
+			if id == nil {
 				userID = nil
+			} else {
+				userID, err = uuid.Parse(id.(string))
+				if err != nil {
+					userID = nil
+				}
 			}
+
 			ctx = context.WithValue(ctx, KeyID, userID)
 
 			switch s.Status(ctx) {

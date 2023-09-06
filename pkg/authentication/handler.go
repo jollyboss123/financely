@@ -4,13 +4,13 @@ import (
 	"errors"
 	"github.com/alexedwards/argon2id"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 	"github.com/jollyboss123/finance-tracker/pkg/logger"
 	"github.com/jollyboss123/finance-tracker/pkg/middleware"
 	"github.com/jollyboss123/finance-tracker/pkg/server/request"
 	"github.com/jollyboss123/finance-tracker/pkg/server/response"
 	"github.com/jollyboss123/finance-tracker/pkg/validate"
 	"github.com/jollyboss123/scs/v2"
+	"log"
 	"net/http"
 )
 
@@ -105,6 +105,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("putting userid now")
+	//ctx = context.WithValue(ctx, middleware.KeyID, user.ID.String())
 	h.session.Put(ctx, string(middleware.KeyID), user.ID.String())
 
 	w.WriteHeader(http.StatusOK)
@@ -121,7 +123,7 @@ func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	currUser := h.session.Get(r.Context(), string(middleware.KeyID))
+	//currUser := h.session.Get(r.Context(), string(middleware.KeyID))
 
 	err := h.session.Destroy(r.Context())
 	if err != nil {
@@ -129,28 +131,28 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userID, err := uuid.Parse(currUser.(string))
-	if err != nil {
-		h.logger.Error().Err(err).Msg("failed parse userID")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	//userID, err := uuid.Parse(currUser.(string))
+	//if err != nil {
+	//	h.logger.Error().Err(err).Msg("failed parse userID")
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
 
-	ok, err := h.repo.Logout(r.Context(), userID)
-	if err != nil {
-		h.logger.Error().Err(err).Msg("failed logout")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if !ok {
-		response.Json(h.logger, w, http.StatusInternalServerError, map[string]string{"message": "unable to logout"})
-	}
+	//ok, err := h.repo.Logout(r.Context(), userID)
+	//if err != nil {
+	//	h.logger.Error().Err(err).Msg("failed logout")
+	//	w.WriteHeader(http.StatusInternalServerError)
+	//	return
+	//}
+	//
+	//if !ok {
+	//	response.Json(h.logger, w, http.StatusInternalServerError, map[string]string{"message": "unable to logout"})
+	//}
 }
 
 func (h *Handler) Csrf(w http.ResponseWriter, r *http.Request) {
-	_, ok := h.session.Get(r.Context(), string(middleware.KeyID)).(uuid.UUID)
-	if !ok {
+	userID := h.session.Get(r.Context(), string(middleware.KeyID))
+	if userID == "" {
 		h.logger.Error().Msg("user not logged in")
 		response.Error(h.logger, w, http.StatusBadRequest, errors.New("you need to be logged in"))
 		return
