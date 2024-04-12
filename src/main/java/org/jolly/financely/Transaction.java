@@ -1,24 +1,44 @@
 package org.jolly.financely;
 
-import java.text.SimpleDateFormat;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 /**
  * @author jolly
  */
-public final class Transaction implements Comparable<Transaction> {
-    private final long id;
-    private final LocalDate date;
-    private final long debit;
-    private final long credit;
-    private final String head;
-    private final String subHead;
-    private final String description;
-    private final String file;
-    private final boolean isSalary;
-    private final String bank;
+@Entity
+public class Transaction implements Comparable<Transaction> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+    @Temporal(TemporalType.DATE)
+    private LocalDate date;
+    private long debit;
+    private long credit;
+    private String head;
+    private String subHead;
+    private String description;
+    private String file;
+    private boolean isSalary;
+    private String bank;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, String bank) {
+        this.id = id;
+        this.date = date;
+        this.debit = debit;
+        this.credit = credit;
+        this.head = head;
+        this.subHead = subHead;
+        this.description = description;
+        this.file = file;
+        this.isSalary = isSalary;
+        this.bank = bank;
+    }
+
+    protected Transaction() {}
 
     public static class Builder {
         // required params

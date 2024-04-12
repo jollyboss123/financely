@@ -41,44 +41,18 @@ public class UOBStatementBatchJob {
                           PlatformTransactionManager transactionManager,
                           ItemReader<RawTransaction> uobItemsReader,
                           ItemProcessor<RawTransaction, Transaction> uobItemProcessor,
-                          ItemWriter<Transaction> uobItemWriter
-                          ) {
+                          ItemWriter<Transaction> bankAccountDBWriter) {
         Step step = new StepBuilder(PROCESSOR_TASK_NAME, jobRepository)
                 .<RawTransaction, Transaction>chunk(100, transactionManager)
                 .reader(uobItemsReader)
                 .processor(uobItemProcessor)
-                .writer(uobItemWriter)
+                .writer(bankAccountDBWriter)
                 .build();
 
         return new JobBuilder(JOB_NAME, jobRepository)
                 .incrementer(new RunIdIncrementer())
                 .start(step)
                 .build();
-    }
-
-    @Bean
-    public BankAccountProcessor uobItemProcessor(BankAccountProcessor itemProcessor) {
-        itemProcessor.setDateTimeFormatter(new DateTimeFormatterBuilder()
-                .parseCaseInsensitive()
-                .appendPattern("dd MMM")
-                .parseDefaulting(ChronoField.YEAR, 2024) //TODO: parse year from statement automatically
-                .toFormatter(Locale.getDefault()));
-        itemProcessor.setDateLen(6);
-        return itemProcessor;
-    }
-
-    @Bean
-    public ItemWriter<Transaction> uobItemWriter() {
-        return new ItemWriter<Transaction>() {
-            @Override
-            public void write(@NonNull Chunk<? extends Transaction> chunk) throws Exception {
-                for (Transaction c : chunk.getItems()) {
-                    if (log.isInfoEnabled()) {
-                        log.info(c.toString());
-                    }
-                }
-            }
-        };
     }
 
     @Bean
@@ -103,5 +77,17 @@ public class UOBStatementBatchJob {
         );
         flatFileItemReader.setLineExtractor(defaultLineExtractor);
         return flatFileItemReader;
+    }
+
+    @Bean
+    public BankAccountProcessor uobItemProcessor(BankAccountProcessor itemProcessor) {
+        itemProcessor.setDateTimeFormatter(new DateTimeFormatterBuilder()
+                .parseCaseInsensitive()
+                .appendPattern("dd MMM")
+                .parseDefaulting(ChronoField.YEAR, 2024) //TODO: parse year from statement automatically
+                .toFormatter(Locale.getDefault()));
+        itemProcessor.setDateLen(6);
+        itemProcessor.setIsCreditTransfer(s -> s.endsWith("CR"));
+        return itemProcessor;
     }
 }

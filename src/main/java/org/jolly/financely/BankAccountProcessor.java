@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Function;
 
 /**
  * @author jolly
@@ -17,6 +18,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
     private static final Logger log = LoggerFactory.getLogger(BankAccountProcessor.class);
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("ddMMMyy");
     private int dateLen = 7;
+    private Function<String, Boolean> isCreditTransfer;
     private final DefaultFieldExtractor transferAmountExtractor;
 
     public BankAccountProcessor(DefaultFieldExtractor transferAmountExtractor) {
@@ -31,16 +33,21 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         this.dateLen = dateLen;
     }
 
+    public void setIsCreditTransfer(Function<String, Boolean> isCreditTransfer) {
+        this.isCreditTransfer = isCreditTransfer;
+    }
+
     @Override
     public Transaction process(@NonNull RawTransaction item) {
         final LocalDate date = extractDate(item);
-        final String desc = item.getMergedLines(dateLen);
-        final String amountStr = transferAmountExtractor.getField(desc)
+        final String fullDesc = item.getMergedLines(dateLen);
+        final String amountStr = transferAmountExtractor.getField(fullDesc)
                 .replace(",", "")
                 .replace(".", "");
+        final String desc = fullDesc.replace(transferAmountExtractor.getField(fullDesc), "");
         long credit = 0;
         long debit = 0;
-        if (desc.contains("CR")) {
+        if (Boolean.TRUE.equals(isCreditTransfer.apply(desc))) {
             credit = Long.parseLong(amountStr);
         } else {
             debit = Long.parseLong(amountStr);

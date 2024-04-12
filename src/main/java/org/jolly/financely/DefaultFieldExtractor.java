@@ -15,12 +15,12 @@ public class DefaultFieldExtractor {
 
     public DefaultFieldExtractor() {
         stringPatterns = new String[]{};
-        patterns = new ArrayList<>();
+        patterns = new LinkedList<>();
     }
 
     public void setStringPatterns(String[] stringPatterns) {
         this.stringPatterns = stringPatterns;
-        patterns = new ArrayList<>();
+        patterns = new LinkedList<>();
         for (String p : stringPatterns) {
             patterns.add(Pattern.compile(p));
         }
