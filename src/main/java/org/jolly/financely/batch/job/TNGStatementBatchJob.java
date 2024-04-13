@@ -25,31 +25,29 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.util.Locale;
+import java.time.format.DateTimeFormatter;
 
 /**
  * @author jolly
  */
 @Configuration
-public class UOBStatementBatchJob {
-    private static final Logger log = LoggerFactory.getLogger(UOBStatementBatchJob.class);
-    @Value("file:${file.path.uob}")
+public class TNGStatementBatchJob {
+    private static final Logger log = LoggerFactory.getLogger(TNGStatementBatchJob.class);
+    @Value("file:${file.path.tng}")
     private Resource[] resources;
-    private static final String JOB_NAME = "UOBAccount.ETL.Job";
-    private static final String PROCESSOR_TASK_NAME = "UOBAccount.ETL.Job.file.load";
+    private static final String JOB_NAME = "TNGAccount.ETL.Job";
+    private static final String PROCESSOR_TASK_NAME = "TNGAccount.ETL.Job.file.load";
 
     @Bean
-    public Job uobBankJob(JobRepository jobRepository,
-                          PlatformTransactionManager transactionManager,
-                          ItemReader<RawTransaction> uobItemsReader,
-                          ItemProcessor<RawTransaction, Transaction> uobItemProcessor,
-                          ItemWriter<Transaction> bankAccountDBWriter) {
+    public Job tngBankJob(JobRepository jobRepository,
+                           PlatformTransactionManager transactionManager,
+                           ItemReader<RawTransaction> tngItemsReader,
+                           ItemProcessor<RawTransaction, Transaction> tngItemProcessor,
+                           ItemWriter<Transaction> bankAccountDBWriter) {
         Step step = new StepBuilder(PROCESSOR_TASK_NAME, jobRepository)
                 .<RawTransaction, Transaction>chunk(100, transactionManager)
-                .reader(uobItemsReader)
-                .processor(uobItemProcessor)
+                .reader(tngItemsReader)
+                .processor(tngItemProcessor)
                 .writer(bankAccountDBWriter)
                 .build();
 
@@ -60,42 +58,33 @@ public class UOBStatementBatchJob {
     }
 
     @Bean
-    public MultiResourceItemReader<RawTransaction> uobItemsReader(StatementPdfReader uobItemReader) {
+    public MultiResourceItemReader<RawTransaction> tngItemsReader(StatementPdfReader tngItemReader) {
         MultiResourceItemReader<RawTransaction> reader = new MultiResourceItemReader<>();
         reader.setResources(resources);
         reader.setStrict(false);
-        reader.setDelegate(uobItemReader);
+        reader.setDelegate(tngItemReader);
         return reader;
     }
 
     @Bean
-    public StatementPdfReader uobItemReader(@Qualifier("StatementPdfReader") StatementPdfReader flatFileItemReader) {
+    public StatementPdfReader tngItemReader(@Qualifier("StatementPdfReader") StatementPdfReader flatFileItemReader) {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
-        defaultLineExtractor.dateRegex("^[0-9]{2} [a-zA-Z]{3}.*");
-        defaultLineExtractor.startReadingText(".*Transaction Date.*");
-        defaultLineExtractor.endReadingText(".*END OF STATEMENT.*");
-        defaultLineExtractor.linesToSkip(
-                new String[]{
-                        ".*COMBINED LIMIT.*",
-                        ".*PREVIOUS BAL.*",
-                        ".*SUB-TOTAL.*",
-                        ".*MINIMUM PAYMENT DUE.*"
-                }
-        );
+        defaultLineExtractor.dateRegex("^[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4}.*");
+        defaultLineExtractor.linesToSkip(new String[]{
+                "^\\*This is a system generated email\\..*"
+        });
         flatFileItemReader.setLineExtractor(defaultLineExtractor);
         return flatFileItemReader;
     }
 
     @Bean
-    public BankAccountProcessor uobItemProcessor(@Qualifier("BankAccountProcessor") BankAccountProcessor itemProcessor) {
-        itemProcessor.setDateTimeFormatter(new DateTimeFormatterBuilder()
-                .parseCaseInsensitive()
-                .appendPattern("dd MMM")
-                .parseDefaulting(ChronoField.YEAR, 2024) //TODO: parse year from statement automatically
-                .toFormatter(Locale.getDefault()));
-        itemProcessor.setDateLengths(new BankAccountProcessor.DateLength(6, null));
+    public BankAccountProcessor tngItemProcessor(@Qualifier("BankAccountProcessor") BankAccountProcessor itemProcessor) {
+        itemProcessor.setDateTimeFormatter(DateTimeFormatter.ofPattern("d/M/yyyy"));
+        itemProcessor.setDateLengths(new BankAccountProcessor.DateLength(8, 10));
         itemProcessor.setCreditTransfer(new String[]{
-                ".* CR$"
+                ".*DUITNOW_RECEIVEFROM.*",
+                ".*Receive from Wallet.*",
+                ".*Daily Earnings.*"
         });
         return itemProcessor;
     }

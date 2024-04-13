@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * @author jolly
  */
-@Component
+@Component(value = "StatementPdfReader")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class StatementPdfReader implements ResourceAwareItemReaderItemStream<RawTransaction> {
     private static final Logger log = LoggerFactory.getLogger(StatementPdfReader.class);

@@ -10,23 +10,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.data.util.Pair;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.function.Function;
+import java.time.format.DateTimeParseException;
 
 /**
  * @author jolly
  */
-@Component
+@Component(value = "BankAccountProcessor")
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BankAccountProcessor implements ItemProcessor<RawTransaction, Transaction> {
     private static final Logger log = LoggerFactory.getLogger(BankAccountProcessor.class);
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("ddMMMyy");
-    private int dateLen = 7;
-    private Function<String, Boolean> isCreditTransfer;
+    // allow for optional min, max length for date strings
+    // set max to null to disable optional
+    private DateLength dateLengths;
+    private String[] creditTransfer;
     private final DefaultFieldExtractor transferAmountExtractor;
     private final DefaultFieldExtractor instalmentExtractor;
 
@@ -39,18 +45,18 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         this.dateTimeFormatter = dateTimeFormatter;
     }
 
-    public void setDateLen(int dateLen) {
-        this.dateLen = dateLen;
+    public void setDateLengths(DateLength dateLengths) {
+        this.dateLengths = dateLengths;
     }
 
-    public void setIsCreditTransfer(Function<String, Boolean> isCreditTransfer) {
-        this.isCreditTransfer = isCreditTransfer;
+    public void setCreditTransfer(String[] creditTransfer) {
+        this.creditTransfer = creditTransfer;
     }
 
     @Override
     public Transaction process(@NonNull RawTransaction item) {
-        final LocalDate date = extractDate(item);
-        String fullDesc = item.getMergedLines(dateLen);
+        final DateInfo dateInfo = extractDate(item);
+        String fullDesc = item.getMergedLines(dateInfo.length());
 
         final String instalmentStr = instalmentExtractor.getField(fullDesc);
         Instalment instalment = null;
@@ -71,13 +77,13 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         final String desc = fullDesc.replace(transferAmountExtractor.getField(fullDesc), "");
         long credit = 0;
         long debit = 0;
-        if (Boolean.TRUE.equals(isCreditTransfer.apply(desc))) {
+        if (isCreditTransfer(desc)) {
             credit = Long.parseLong(amountStr);
         } else {
             debit = Long.parseLong(amountStr);
         }
 
-        return new Transaction.Builder(item.getFile(),1L, date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)
+        return new Transaction.Builder(item.getFile(),1L, dateInfo.date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)
                 .credit(credit)
                 .debit(debit)
                 .instalment(instalment)
@@ -85,8 +91,41 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
                 .build();
     }
 
-    private LocalDate extractDate(RawTransaction rawTransaction) {
-        String dateString = rawTransaction.getLines().getFirst().substring(0,dateLen);
-        return LocalDate.parse(dateString, dateTimeFormatter);
+    private DateInfo extractDate(RawTransaction rawTransaction) {
+        int i = dateLengths.min();
+        String dateStr = null;
+
+        if (dateLengths.max() == null) {
+            dateStr = rawTransaction.getLines().getFirst().substring(0, i);
+            final LocalDate localDate = LocalDate.parse(dateStr, dateTimeFormatter);
+            return new DateInfo(i, localDate);
+        } else {
+            while (i <= dateLengths.max()) {
+                dateStr = rawTransaction.getLines().getFirst().substring(0, i);
+                try {
+                    final LocalDate localDate = LocalDate.parse(dateStr, dateTimeFormatter);
+                    return new DateInfo(i, localDate);
+                } catch (DateTimeParseException ignored) {
+                    // continue
+                }
+                i++;
+            }
+        }
+
+        throw new DateTimeParseException("Date not found or invalid format", dateStr, i);
     }
+
+    private boolean isCreditTransfer(String desc) {
+        if (creditTransfer != null) {
+            for (String ct : creditTransfer) {
+                if (desc.matches(ct)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public record DateLength(int min, Integer max){}
+    private record DateInfo(int length, LocalDate date){}
 }

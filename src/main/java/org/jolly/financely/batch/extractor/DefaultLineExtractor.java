@@ -65,7 +65,7 @@ public class DefaultLineExtractor implements LineExtractor {
                     rawTransaction = new RawTransaction(file);
                     items.add(rawTransaction);
                 }
-                if (rawTransaction != null && !line.matches(startReadingText)) {
+                if (rawTransaction != null) {
                     log.debug("read line: {}", line);
                     rawTransaction.getLines().add(line);
                 }
