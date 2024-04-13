@@ -7,12 +7,11 @@ import org.springframework.stereotype.Component;
  * @author jolly
  */
 @Component
-public class TransferAmountExtractor extends DefaultFieldExtractor {
+public class InstalmentExtractor extends DefaultFieldExtractor {
     @PostConstruct
     public void init() {
-        super.setStringPatterns(new String[] {
-                "(?<!\\d)\\d{1,3}(?:,\\d{3})+(?:\\.\\d{2})?",
-                "\\d+\\.\\d+"
+        super.setStringPatterns(new String[]{
+                "\\d{2}\\/\\d{2}"
         });
     }
 }

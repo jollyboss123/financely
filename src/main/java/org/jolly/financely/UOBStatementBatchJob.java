@@ -34,7 +34,6 @@ public class UOBStatementBatchJob {
     private Resource[] resources;
     private static final String JOB_NAME = "UOBAccount.ETL.Job";
     private static final String PROCESSOR_TASK_NAME = "UOBAccount.ETL.Job.file.load";
-    private static final String ARCHIVE_TASK_NAME = "UOBAccount.ETL.Job.file.archive";
 
     @Bean
     public Job uobBankJob(JobRepository jobRepository,
@@ -68,11 +67,14 @@ public class UOBStatementBatchJob {
     public StatementPdfReader uobItemReader(StatementPdfReader flatFileItemReader) {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
         defaultLineExtractor.dateRegex("^[0-9]{2} [a-zA-Z]{3}.*");
-        defaultLineExtractor.startReadingText("Transaction Date");
-        defaultLineExtractor.endReadingText("END OF STATEMENT*");
+        defaultLineExtractor.startReadingText(".*Transaction Date.*");
+        defaultLineExtractor.endReadingText(".*END OF STATEMENT.*");
         defaultLineExtractor.linesToSkip(
                 new String[]{
-
+                        ".*COMBINED LIMIT.*",
+                        ".*PREVIOUS BAL.*",
+                        ".*SUB-TOTAL.*",
+                        ".*MINIMUM PAYMENT DUE.*"
                 }
         );
         flatFileItemReader.setLineExtractor(defaultLineExtractor);

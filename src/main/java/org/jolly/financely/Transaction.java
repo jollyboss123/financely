@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 /**
  * @author jolly
  */
 @Entity
-public class Transaction implements Comparable<Transaction> {
+@EntityListeners(AuditListener.class)
+public class Transaction implements Comparable<Transaction>, Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+    @Embedded
+    private Audit audit;
     @Temporal(TemporalType.DATE)
     private LocalDate date;
     private long debit;
@@ -22,10 +26,13 @@ public class Transaction implements Comparable<Transaction> {
     private String description;
     private String file;
     private boolean isSalary;
+    private boolean isInstalment;
     private String bank;
+    @Embedded
+    private Instalment instalment;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, String bank) {
+    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, boolean isInstalment, String bank, Instalment instalment) {
         this.id = id;
         this.date = date;
         this.debit = debit;
@@ -36,6 +43,8 @@ public class Transaction implements Comparable<Transaction> {
         this.file = file;
         this.isSalary = isSalary;
         this.bank = bank;
+        this.isInstalment = isInstalment;
+        this.instalment = instalment;
     }
 
     protected Transaction() {}
@@ -54,6 +63,8 @@ public class Transaction implements Comparable<Transaction> {
         private String head;
         private String subHead;
         private boolean isSalary = false;
+        private boolean isInstalment = false;
+        private Instalment instalment;
 
         public Builder(String file, long id, LocalDate date, String bank, String description) {
             this.file = file;
@@ -88,6 +99,16 @@ public class Transaction implements Comparable<Transaction> {
             return this;
         }
 
+        public Builder isInstalment(boolean val) {
+            isInstalment = val;
+            return this;
+        }
+
+        public Builder instalment(Instalment val) {
+            instalment = val;
+            return this;
+        }
+
         public Transaction build() {
             return new Transaction(this);
         }
@@ -104,6 +125,8 @@ public class Transaction implements Comparable<Transaction> {
         this.head = builder.head;
         this.subHead = builder.subHead;
         this.isSalary = builder.isSalary;
+        this.isInstalment = builder.isInstalment;
+        this.instalment = builder.instalment;
     }
 
     public String getDateStr() {
@@ -121,7 +144,9 @@ public class Transaction implements Comparable<Transaction> {
         result = 31 * result + (subHead != null ? subHead.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + Boolean.hashCode(isSalary);
+        result = 31 * result + Boolean.hashCode(isInstalment);
         result = 31 * result + (bank != null ? bank.hashCode() : 0);
+        result = 31 * result + (instalment != null ? instalment.hashCode() : 0);
         return result;
     }
 
@@ -133,15 +158,15 @@ public class Transaction implements Comparable<Transaction> {
         if (!(o instanceof Transaction t)) {
             return false;
         }
-        return t.id == (id) &&
-                t.date.equals(date) &&
+        return Objects.equals(t.id, id) &&
+                Objects.equals(t.date, date) &&
                 t.debit == debit &&
                 t.credit == credit &&
-                t.head.equals(head) &&
-                t.subHead.equals(subHead) &&
-                t.description.equals(description) &&
+                Objects.equals(t.head, head) &&
+                Objects.equals(t.subHead, subHead) &&
+                Objects.equals(t.description, description) &&
                 t.isSalary == isSalary &&
-                t.bank.equals(bank);
+                Objects.equals(t.bank, bank);
     }
 
     @Override
@@ -152,5 +177,97 @@ public class Transaction implements Comparable<Transaction> {
     @Override
     public String toString() {
         return "Transaction {date=%s, debit=%d, credit=%d, head=%s, description=%s, isSalary=%b".formatted(getDateStr(), debit, credit, head, description, isSalary);
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Audit getAudit() {
+        return audit;
+    }
+
+    public void setAudit(Audit audit) {
+        this.audit = audit;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public long getCredit() {
+        return credit;
+    }
+
+    public void setCredit(long credit) {
+        this.credit = credit;
+    }
+
+    public long getDebit() {
+        return debit;
+    }
+
+    public void setDebit(long debit) {
+        this.debit = debit;
+    }
+
+    public String getBank() {
+        return bank;
+    }
+
+    public void setBank(String bank) {
+        this.bank = bank;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getHead() {
+        return head;
+    }
+
+    public void setHead(String head) {
+        this.head = head;
+    }
+
+    public String getSubHead() {
+        return subHead;
+    }
+
+    public void setSubHead(String subHead) {
+        this.subHead = subHead;
+    }
+
+    public boolean isSalary() {
+        return isSalary;
+    }
+
+    public void setSalary(boolean salary) {
+        isSalary = salary;
+    }
+
+    public Instalment getInstalment() {
+        return instalment;
+    }
+
+    public void setInstalment(Instalment instalment) {
+        this.instalment = instalment;
     }
 }

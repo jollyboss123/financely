@@ -92,11 +92,18 @@ public class StatementPdfReader implements ResourceAwareItemReaderItemStream<Raw
 
         PdfTextExtractor pdfTextExtractor = new PdfTextExtractor(pdfReader);
 
-        for (int i = 2; i <= pages; i++) {
-            String content = pdfTextExtractor.getTextFromPage(i, true);
-            if (!lineExtractor.extractLine(content, items, resource.getFilename())) {
+        int i = 1;
+        while (i <= pages) {
+            String content = null;
+            try {
+                content = pdfTextExtractor.getTextFromPage(i, true);
+            } catch (Exception ex) {
+                log.warn("encountered exception reading text from page {}", i, ex);
+            }
+            if (content != null && !lineExtractor.extractLine(content, items, resource.getFilename())) {
                 break;
             }
+            i++;
         }
     }
 }
