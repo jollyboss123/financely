@@ -71,7 +71,7 @@ public class TNGStatementBatchJob {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
         defaultLineExtractor.dateRegex("^[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4}.*");
         defaultLineExtractor.linesToSkip(new String[]{
-                "^\\*This is a system generated email\\..*"
+                "^\\*This is a system generated email\\..*",
         });
         flatFileItemReader.setLineExtractor(defaultLineExtractor);
         return flatFileItemReader;
@@ -82,9 +82,13 @@ public class TNGStatementBatchJob {
         itemProcessor.setDateTimeFormatter(DateTimeFormatter.ofPattern("d/M/yyyy"));
         itemProcessor.setDateLengths(new BankAccountProcessor.DateLength(8, 10));
         itemProcessor.setCreditTransfer(new String[]{
-                ".*DUITNOW_RECEIVEFROM.*",
+                ".*DUITNOW_RECEI.*",
                 ".*Receive from Wallet.*",
                 ".*Daily Earnings.*"
+        });
+        // to avoid duplicate records from TnG automatic reload payment from Go+
+        itemProcessor.setItemsToSkip(new String[]{
+                ".*Quick Reload Payment \\(via .*"
         });
         return itemProcessor;
     }

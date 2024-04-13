@@ -33,6 +33,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
     // set max to null to disable optional
     private DateLength dateLengths;
     private String[] creditTransfer;
+    private String[] itemsToSkip;
     private final DefaultFieldExtractor transferAmountExtractor;
     private final DefaultFieldExtractor instalmentExtractor;
 
@@ -53,10 +54,18 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         this.creditTransfer = creditTransfer;
     }
 
+    public void setItemsToSkip(String[] itemsToSkip) {
+        this.itemsToSkip = itemsToSkip;
+    }
+
     @Override
     public Transaction process(@NonNull RawTransaction item) {
         final DateInfo dateInfo = extractDate(item);
         String fullDesc = item.getMergedLines(dateInfo.length());
+
+        if (shouldSkip(fullDesc)) {
+            return null;
+        }
 
         final String instalmentStr = instalmentExtractor.getField(fullDesc);
         Instalment instalment = null;
@@ -123,6 +132,22 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
                 }
             }
         }
+        return false;
+    }
+
+    private boolean shouldSkip(String desc) {
+        if (desc.trim().isEmpty()) {
+            return true;
+        }
+
+        if (itemsToSkip != null) {
+            for (String item : itemsToSkip) {
+                if (desc.matches(item)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

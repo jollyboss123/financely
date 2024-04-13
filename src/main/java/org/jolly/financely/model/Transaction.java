@@ -22,8 +22,8 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     private LocalDate date;
     private long debit;
     private long credit;
-    private String head;
-    private String subHead;
+    private String head; // remove
+    private String subHead; // remove
     private String description;
     private String file;
     private boolean isSalary;
@@ -33,6 +33,9 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     private Bank bank;
     @Embedded
     private Instalment instalment;
+    // from
+    // to
+    // currency
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
