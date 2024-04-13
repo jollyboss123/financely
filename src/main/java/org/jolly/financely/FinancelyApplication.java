@@ -1,6 +1,6 @@
 package org.jolly.financely;
 
-import org.jolly.financely.money.Money;
+import org.jolly.financely.model.Money;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

@@ -6,8 +6,8 @@ package org.jolly.financely.constant;
 public enum Bank {
     UOB,
     CIMB,
-    MAYBANK,
+    MBB,
     PBB,
     TNG,
-    GX
+    GXB
 }

@@ -1,4 +1,4 @@
-package org.jolly.financely.money;
+package org.jolly.financely.exception;
 
 /**
  * Thrown when a set of <code>Money</code> objects do not have matching currencies.

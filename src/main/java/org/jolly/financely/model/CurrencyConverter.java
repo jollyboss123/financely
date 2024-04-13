@@ -1,4 +1,4 @@
-package org.jolly.financely.money;
+package org.jolly.financely.model;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

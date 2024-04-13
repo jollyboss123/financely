@@ -12,7 +12,7 @@ public class TransferAmountExtractor extends DefaultFieldExtractor {
     @PostConstruct
     public void init() {
         super.setStringPatterns(new String[] {
-                "(?<!\\d)\\d{1,3}(?:,\\d{3})+(?:\\.\\d{2,4})?",
+                "(?<!\\d)\\d{1,3}(?:,\\d{3})+(?:\\.\\d{2})?",
                 "\\d+\\.\\d+"
         });
     }

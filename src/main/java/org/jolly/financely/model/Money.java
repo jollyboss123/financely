@@ -1,9 +1,10 @@
-package org.jolly.financely.money;
+package org.jolly.financely.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
+import org.jolly.financely.exception.MismatchCurrencyException;
 import org.springframework.lang.NonNull;
 
 import java.io.*;
