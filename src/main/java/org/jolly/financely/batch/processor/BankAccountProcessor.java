@@ -6,6 +6,7 @@ import org.jolly.financely.constant.MDCKey;
 import org.jolly.financely.model.Instalment;
 import org.jolly.financely.model.RawTransaction;
 import org.jolly.financely.model.Transaction;
+import org.jolly.financely.money.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -17,6 +18,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -81,15 +83,14 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         }
 
         final String amountStr = transferAmountExtractor.getField(fullDesc)
-                .replace(",", "")
-                .replace(".", "");
+                .replace(",", "");
         final String desc = fullDesc.replace(transferAmountExtractor.getField(fullDesc), "");
-        long credit = 0;
-        long debit = 0;
+        Money credit = null;
+        Money debit = null;
         if (isCreditTransfer(desc)) {
-            credit = Long.parseLong(amountStr);
+            credit = Money.of(BigDecimal.valueOf(Double.parseDouble(amountStr)), true);
         } else {
-            debit = Long.parseLong(amountStr);
+            debit = Money.of(BigDecimal.valueOf(Double.parseDouble(amountStr)), true);
         }
 
         return new Transaction.Builder(item.getFile(),1L, dateInfo.date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)

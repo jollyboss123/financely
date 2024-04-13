@@ -2,6 +2,7 @@ package org.jolly.financely.model;
 
 import jakarta.persistence.*;
 import org.jolly.financely.constant.Bank;
+import org.jolly.financely.money.Money;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -20,10 +21,14 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     private Audit audit;
     @Temporal(TemporalType.DATE)
     private LocalDate date;
-    private long debit;
-    private long credit;
-    private String head; // remove
-    private String subHead; // remove
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "credit_amount"))
+    @AttributeOverride(name = "currency", column = @Column(name = "credit_currency", length = 10))
+    private Money credit;
+    @Embedded
+    @AttributeOverride(name = "amount", column = @Column(name = "debit_amount"))
+    @AttributeOverride(name = "currency", column = @Column(name = "debit_currency", length = 10))
+    private Money debit;
     private String description;
     private String file;
     private boolean isSalary;
@@ -35,16 +40,13 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     private Instalment instalment;
     // from
     // to
-    // currency
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
+    protected Transaction(long id, LocalDate date, Money debit, Money credit, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
         this.id = id;
         this.date = date;
         this.debit = debit;
         this.credit = credit;
-        this.head = head;
-        this.subHead = subHead;
         this.description = description;
         this.file = file;
         this.isSalary = isSalary;
@@ -64,8 +66,8 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         private final String file;
 
         // optional params
-        private long debit = 0;
-        private long credit = 0;
+        private Money debit;
+        private Money credit;
         private String head;
         private String subHead;
         private boolean isSalary = false;
@@ -80,23 +82,13 @@ public class Transaction implements Comparable<Transaction>, Auditable {
             this.description = description;
         }
 
-        public Builder debit(long val) {
+        public Builder debit(Money val) {
             debit = val;
             return this;
         }
 
-        public Builder credit(long val) {
+        public Builder credit(Money val) {
             credit = val;
-            return this;
-        }
-
-        public Builder head(String val) {
-            head = val;
-            return this;
-        }
-
-        public Builder subHead(String val) {
-            subHead = val;
             return this;
         }
 
@@ -128,8 +120,6 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         this.date = builder.date;
         this.debit = builder.debit;
         this.credit = builder.credit;
-        this.head = builder.head;
-        this.subHead = builder.subHead;
         this.isSalary = builder.isSalary;
         this.isInstalment = builder.isInstalment;
         this.instalment = builder.instalment;
@@ -144,10 +134,8 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         int result = Long.hashCode(id);
         result = 31 * result + file.hashCode();
         result = 31 * result + (date != null ? date.hashCode() : 0);
-        result = 31 * result + (Long.hashCode(debit));
-        result = 31 * result + (Long.hashCode(credit));
-        result = 31 * result + (head != null ? head.hashCode() : 0);
-        result = 31 * result + (subHead != null ? subHead.hashCode() : 0);
+        result = 31 * result + (debit != null ? debit.hashCode() : 0);
+        result = 31 * result + (credit != null ? credit.hashCode() : 0);
         result = 31 * result + (description != null ? description.hashCode() : 0);
         result = 31 * result + Boolean.hashCode(isSalary);
         result = 31 * result + Boolean.hashCode(isInstalment);
@@ -166,10 +154,8 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         }
         return Objects.equals(t.id, id) &&
                 Objects.equals(t.date, date) &&
-                t.debit == debit &&
-                t.credit == credit &&
-                Objects.equals(t.head, head) &&
-                Objects.equals(t.subHead, subHead) &&
+                Objects.equals(t.debit, debit) &&
+                Objects.equals(t.credit, credit) &&
                 Objects.equals(t.description, description) &&
                 t.isSalary == isSalary &&
                 Objects.equals(t.bank, bank);
@@ -182,7 +168,7 @@ public class Transaction implements Comparable<Transaction>, Auditable {
 
     @Override
     public String toString() {
-        return "Transaction {date=%s, debit=%d, credit=%d, head=%s, description=%s, isSalary=%b".formatted(getDateStr(), debit, credit, head, description, isSalary);
+        return "Transaction {date=%s, debit=%s, credit=%s, description=%s, isSalary=%b".formatted(getDateStr(), debit.toString(), credit.toString(), description, isSalary);
     }
 
     public Long getId() {
@@ -213,19 +199,19 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         this.date = date;
     }
 
-    public long getCredit() {
+    public Money getCredit() {
         return credit;
     }
 
-    public void setCredit(long credit) {
+    public void setCredit(Money credit) {
         this.credit = credit;
     }
 
-    public long getDebit() {
+    public Money getDebit() {
         return debit;
     }
 
-    public void setDebit(long debit) {
+    public void setDebit(Money debit) {
         this.debit = debit;
     }
 
@@ -243,22 +229,6 @@ public class Transaction implements Comparable<Transaction>, Auditable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getHead() {
-        return head;
-    }
-
-    public void setHead(String head) {
-        this.head = head;
-    }
-
-    public String getSubHead() {
-        return subHead;
-    }
-
-    public void setSubHead(String subHead) {
-        this.subHead = subHead;
     }
 
     public boolean isSalary() {
