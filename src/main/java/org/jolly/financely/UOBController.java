@@ -2,6 +2,7 @@ package org.jolly.financely;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
@@ -32,17 +33,19 @@ public class UOBController {
 
     @GetMapping("/load")
     public BatchStatus load() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
+        MDC.put(MDCKey.BANK.name(), Bank.UOB.name());
         Map<String, JobParameter<?>> parameters = new HashMap<>();
         parameters.put("time", new JobParameter<>(System.currentTimeMillis(), Long.class));
         JobParameters jobParameters = new JobParameters(parameters);
 
         JobExecution jobExecution = jobLauncher.run(job, jobParameters);
         log.debug("batch status: {}", jobExecution.getStatus());
-        log.debug("batch is running");
 
         while (jobExecution.isRunning()) {
+            log.debug("batch is running");
             log.debug("...");
         }
+        MDC.remove(MDCKey.BANK.name());
 
         return jobExecution.getStatus();
     }

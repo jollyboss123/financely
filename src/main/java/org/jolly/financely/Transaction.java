@@ -27,12 +27,14 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     private String file;
     private boolean isSalary;
     private boolean isInstalment;
-    private String bank;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 8)
+    private Bank bank;
     @Embedded
     private Instalment instalment;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, boolean isInstalment, String bank, Instalment instalment) {
+    protected Transaction(long id, LocalDate date, long debit, long credit, String head, String subHead, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
         this.id = id;
         this.date = date;
         this.debit = debit;
@@ -53,7 +55,7 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         // required params
         private final long id;
         private final LocalDate date;
-        private final String bank;
+        private final Bank bank;
         private final String description;
         private final String file;
 
@@ -66,7 +68,7 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         private boolean isInstalment = false;
         private Instalment instalment;
 
-        public Builder(String file, long id, LocalDate date, String bank, String description) {
+        public Builder(String file, long id, LocalDate date, Bank bank, String description) {
             this.file = file;
             this.id = id;
             this.date = date;
@@ -223,11 +225,11 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         this.debit = debit;
     }
 
-    public String getBank() {
+    public Bank getBank() {
         return bank;
     }
 
-    public void setBank(String bank) {
+    public void setBank(Bank bank) {
         this.bank = bank;
     }
 

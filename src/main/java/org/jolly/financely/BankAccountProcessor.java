@@ -2,6 +2,7 @@ package org.jolly.financely;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -44,6 +45,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
     public Transaction process(@NonNull RawTransaction item) {
         final LocalDate date = extractDate(item);
         String fullDesc = item.getMergedLines(dateLen);
+
         final String instalmentStr = instalmentExtractor.getField(fullDesc);
         Instalment instalment = null;
         boolean isInstalment = false;
@@ -56,6 +58,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
                     .build();
             isInstalment = true;
         }
+
         final String amountStr = transferAmountExtractor.getField(fullDesc)
                 .replace(",", "")
                 .replace(".", "");
@@ -67,7 +70,8 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         } else {
             debit = Long.parseLong(amountStr);
         }
-        return new Transaction.Builder(item.getFile(),1L, date, "UOB", desc)
+
+        return new Transaction.Builder(item.getFile(),1L, date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)
                 .credit(credit)
                 .debit(debit)
                 .instalment(instalment)
