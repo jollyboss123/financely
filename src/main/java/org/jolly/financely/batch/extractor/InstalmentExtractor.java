@@ -1,6 +1,7 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.extractor;
 
 import jakarta.annotation.PostConstruct;
+import org.jolly.financely.batch.extractor.DefaultFieldExtractor;
 import org.springframework.stereotype.Component;
 
 /**

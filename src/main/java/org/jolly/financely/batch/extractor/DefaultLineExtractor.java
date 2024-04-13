@@ -1,5 +1,6 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.extractor;
 
+import org.jolly.financely.model.RawTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

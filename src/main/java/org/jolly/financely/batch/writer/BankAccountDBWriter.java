@@ -1,5 +1,7 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.writer;
 
+import org.jolly.financely.model.Transaction;
+import org.jolly.financely.repository.TransactionRepository;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.lang.NonNull;

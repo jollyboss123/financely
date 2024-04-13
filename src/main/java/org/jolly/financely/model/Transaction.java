@@ -1,6 +1,7 @@
-package org.jolly.financely;
+package org.jolly.financely.model;
 
 import jakarta.persistence.*;
+import org.jolly.financely.constant.Bank;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

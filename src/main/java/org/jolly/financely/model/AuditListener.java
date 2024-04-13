@@ -1,4 +1,4 @@
-package org.jolly.financely;
+package org.jolly.financely.model;
 
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;

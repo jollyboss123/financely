@@ -1,5 +1,11 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.processor;
 
+import org.jolly.financely.batch.extractor.DefaultFieldExtractor;
+import org.jolly.financely.constant.Bank;
+import org.jolly.financely.constant.MDCKey;
+import org.jolly.financely.model.Instalment;
+import org.jolly.financely.model.RawTransaction;
+import org.jolly.financely.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;

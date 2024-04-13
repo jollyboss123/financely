@@ -1,4 +1,4 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.extractor;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

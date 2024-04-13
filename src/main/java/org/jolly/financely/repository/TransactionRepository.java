@@ -1,5 +1,6 @@
-package org.jolly.financely;
+package org.jolly.financely.repository;
 
+import org.jolly.financely.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

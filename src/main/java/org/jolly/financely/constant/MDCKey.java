@@ -1,4 +1,4 @@
-package org.jolly.financely;
+package org.jolly.financely.constant;
 
 /**
  * @author jolly

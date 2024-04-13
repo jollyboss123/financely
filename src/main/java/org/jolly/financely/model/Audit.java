@@ -1,4 +1,4 @@
-package org.jolly.financely;
+package org.jolly.financely.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

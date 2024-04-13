@@ -1,7 +1,10 @@
-package org.jolly.financely;
+package org.jolly.financely.batch.reader;
 
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.parser.PdfTextExtractor;
+import org.jolly.financely.batch.extractor.DefaultLineExtractor;
+import org.jolly.financely.batch.extractor.LineExtractor;
+import org.jolly.financely.model.RawTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.*;

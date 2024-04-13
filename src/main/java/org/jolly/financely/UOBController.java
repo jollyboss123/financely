@@ -1,5 +1,8 @@
 package org.jolly.financely;
 
+import org.jolly.financely.annotation.LogExecutionTime;
+import org.jolly.financely.constant.Bank;
+import org.jolly.financely.constant.MDCKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -31,6 +34,7 @@ public class UOBController {
         this.job = job;
     }
 
+    @LogExecutionTime
     @GetMapping("/load")
     public BatchStatus load() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         MDC.put(MDCKey.BANK.name(), Bank.UOB.name());

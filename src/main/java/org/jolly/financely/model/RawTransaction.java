@@ -1,4 +1,4 @@
-package org.jolly.financely;
+package org.jolly.financely.model;
 
 import java.util.LinkedList;
 import java.util.List;

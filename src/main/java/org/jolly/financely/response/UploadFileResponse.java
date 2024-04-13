@@ -1,4 +1,6 @@
-package org.jolly.financely;
+package org.jolly.financely.response;
+
+import org.jolly.financely.constant.Bank;
 
 /**
  * @author jolly
