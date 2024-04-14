@@ -1,9 +1,12 @@
 package org.jolly.financely.batch.reader;
 
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.parser.PdfTextExtractor;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.jolly.financely.batch.extractor.DefaultLineExtractor;
 import org.jolly.financely.batch.extractor.LineExtractor;
+import org.jolly.financely.exception.PdfCloseException;
+import org.jolly.financely.exception.PdfOpenException;
 import org.jolly.financely.model.RawTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +31,10 @@ public class StatementPdfReader implements ResourceAwareItemReaderItemStream<Raw
     private static final Logger log = LoggerFactory.getLogger(StatementPdfReader.class);
     private Resource resource;
     private String pdfPassword;
-    private PdfReader pdfReader;
     private List<RawTransaction> items = new LinkedList<>();
     private int currentIndex = 0;
     private LineExtractor lineExtractor = new DefaultLineExtractor();
+    private PDDocument pdDocument;
 
     public void setLineExtractor(LineExtractor lineExtractor) {
         this.lineExtractor = lineExtractor;
@@ -65,7 +68,7 @@ public class StatementPdfReader implements ResourceAwareItemReaderItemStream<Raw
             try {
                 readLines();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new PdfOpenException(e);
             }
         }
     }
@@ -79,34 +82,25 @@ public class StatementPdfReader implements ResourceAwareItemReaderItemStream<Raw
     public void close() throws ItemStreamException {
         log.debug("finished processing file: {}", resource);
 
-        if (pdfReader != null && resource != null) {
-            pdfReader.close();
+        if (pdDocument != null && resource != null) {
+            try {
+                pdDocument.close();
+            } catch (IOException e) {
+                throw new PdfCloseException(e);
+            }
         }
     }
 
     private void readLines() throws IOException {
         items = new LinkedList<>();
-        if (pdfPassword != null) {
-            pdfReader = new PdfReader(resource.getFile().getPath(), pdfPassword.getBytes());
-        } else {
-            pdfReader = new PdfReader(resource.getFile().getPath());
+        if (pdfPassword == null) {
+            pdDocument = Loader.loadPDF(resource.getFile());
         }
-        int pages = pdfReader.getNumberOfPages();
-
-        PdfTextExtractor pdfTextExtractor = new PdfTextExtractor(pdfReader);
-
-        int i = 1;
-        while (i <= pages) {
-            String content = null;
-            try {
-                content = pdfTextExtractor.getTextFromPage(i, true);
-            } catch (Exception ex) {
-                log.warn("encountered exception reading text from page {}", i, ex);
-            }
-            if (content != null && !lineExtractor.extractLine(content, items, resource.getFilename())) {
-                break;
-            }
-            i++;
+        PDFTextStripper stripper = new PDFTextStripper();
+        stripper.setSortByPosition(true);
+        String content = stripper.getText(pdDocument);
+        if (content != null) {
+            lineExtractor.extractLine(content, items, resource.getFilename());
         }
     }
 }

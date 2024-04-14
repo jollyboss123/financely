@@ -86,7 +86,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
         final String desc = fullDesc.replace(transferAmountExtractor.getField(fullDesc), "");
         Money credit = null;
         Money debit = null;
-        if (isCreditTransfer(desc)) {
+        if (isCreditTransfer(fullDesc)) {
             credit = Money.of(BigDecimal.valueOf(Double.parseDouble(amountStr)), true);
         } else {
             debit = Money.of(BigDecimal.valueOf(Double.parseDouble(amountStr)), true);
