@@ -3,7 +3,7 @@ package org.jolly.financely.batch.job;
 import org.jolly.financely.batch.extractor.DefaultLineExtractor;
 import org.jolly.financely.batch.extractor.LineExtractor;
 import org.jolly.financely.batch.processor.BankAccountProcessor;
-import org.jolly.financely.batch.reader.StatementPdfReader;
+import org.jolly.financely.batch.reader.PdfReader;
 import org.jolly.financely.model.RawTransaction;
 import org.jolly.financely.model.Transaction;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public class GXStatementBatchJob {
     }
 
     @Bean
-    public MultiResourceItemReader<RawTransaction> gxItemsReader(StatementPdfReader gxItemReader) {
+    public MultiResourceItemReader<RawTransaction> gxItemsReader(PdfReader gxItemReader) {
         MultiResourceItemReader<RawTransaction> reader = new MultiResourceItemReader<>();
         reader.setResources(resources);
         reader.setStrict(false);
@@ -69,7 +69,7 @@ public class GXStatementBatchJob {
     }
 
     @Bean
-    public StatementPdfReader gxItemReader(@Qualifier("StatementPdfReader") StatementPdfReader flatFileItemReader) {
+    public PdfReader gxItemReader(@Qualifier("pdfReader") PdfReader flatFileItemReader) {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
         defaultLineExtractor.dateRegex("^[0-9]{1,2} [a-zA-Z]{3}.*");
         defaultLineExtractor.startReadingText(".*Transaction description.*");
@@ -82,7 +82,7 @@ public class GXStatementBatchJob {
     }
 
     @Bean
-    public BankAccountProcessor gxItemProcessor(@Qualifier("BankAccountProcessor") BankAccountProcessor itemProcessor) {
+    public BankAccountProcessor gxItemProcessor(@Qualifier("bankAccountProcessor") BankAccountProcessor itemProcessor) {
         itemProcessor.setDateTimeFormatter(new DateTimeFormatterBuilder()
                 .parseCaseInsensitive()
                 .appendPattern("d MMM")

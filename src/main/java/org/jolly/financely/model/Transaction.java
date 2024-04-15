@@ -41,7 +41,7 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     // to
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    protected Transaction(long id, LocalDate date, Money debit, Money credit, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
+    protected Transaction(Long id, LocalDate date, Money debit, Money credit, String description, String file, boolean isSalary, boolean isInstalment, Bank bank, Instalment instalment) {
         this.id = id;
         this.date = date;
         this.debit = debit;
@@ -57,25 +57,21 @@ public class Transaction implements Comparable<Transaction>, Auditable {
     protected Transaction() {}
 
     public static class Builder {
-        // required params
-        private final long id;
+        // required
         private final LocalDate date;
         private final Bank bank;
         private final String description;
         private final String file;
 
-        // optional params
+        // optional
         private Money debit;
         private Money credit;
-        private String head;
-        private String subHead;
         private boolean isSalary = false;
         private boolean isInstalment = false;
         private Instalment instalment;
 
-        public Builder(String file, long id, LocalDate date, Bank bank, String description) {
+        public Builder(String file, LocalDate date, Bank bank, String description) {
             this.file = file;
-            this.id = id;
             this.date = date;
             this.bank = bank;
             this.description = description;
@@ -113,7 +109,6 @@ public class Transaction implements Comparable<Transaction>, Auditable {
 
     private Transaction(Builder builder) {
         this.file = builder.file;
-        this.id = builder.id;
         this.bank = builder.bank;
         this.description = builder.description;
         this.date = builder.date;
@@ -174,10 +169,12 @@ public class Transaction implements Comparable<Transaction>, Auditable {
         return id;
     }
 
+    @Override
     public Audit getAudit() {
         return audit;
     }
 
+    @Override
     public void setAudit(Audit audit) {
         this.audit = audit;
     }

@@ -3,7 +3,7 @@ package org.jolly.financely.batch.job;
 import org.jolly.financely.batch.extractor.DefaultLineExtractor;
 import org.jolly.financely.batch.extractor.LineExtractor;
 import org.jolly.financely.batch.processor.BankAccountProcessor;
-import org.jolly.financely.batch.reader.StatementPdfReader;
+import org.jolly.financely.batch.reader.PdfReader;
 import org.jolly.financely.model.RawTransaction;
 import org.jolly.financely.model.Transaction;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public class MaybankStatementBatchJob {
     }
 
     @Bean
-    public MultiResourceItemReader<RawTransaction> mbbItemsReader(StatementPdfReader mbbItemReader) {
+    public MultiResourceItemReader<RawTransaction> mbbItemsReader(PdfReader mbbItemReader) {
         MultiResourceItemReader<RawTransaction> reader = new MultiResourceItemReader<>();
         reader.setResources(resources);
         reader.setStrict(false);
@@ -67,7 +67,7 @@ public class MaybankStatementBatchJob {
     }
 
     @Bean
-    public StatementPdfReader mbbItemReader(@Qualifier("StatementPdfReader") StatementPdfReader flatFileItemReader) {
+    public PdfReader mbbItemReader(@Qualifier("pdfReader") PdfReader flatFileItemReader) {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
         defaultLineExtractor.dateRegex("^[0-9]{2}\\/[0-9]{2}\\/[0-9]{4}.*");
         defaultLineExtractor.startReadingText(".*ENTRY DATE.*");
@@ -81,7 +81,7 @@ public class MaybankStatementBatchJob {
     }
 
     @Bean
-    public BankAccountProcessor mbbItemProcessor(@Qualifier("BankAccountProcessor") BankAccountProcessor itemProcessor) {
+    public BankAccountProcessor mbbItemProcessor(@Qualifier("bankAccountProcessor") BankAccountProcessor itemProcessor) {
         itemProcessor.setDateTimeFormatter(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         itemProcessor.setDateLengths(new BankAccountProcessor.DateLength(10, null));
         itemProcessor.setCreditTransfer(new String[]{

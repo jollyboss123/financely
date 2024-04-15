@@ -3,7 +3,7 @@ package org.jolly.financely.batch.job;
 import org.jolly.financely.batch.extractor.DefaultLineExtractor;
 import org.jolly.financely.batch.extractor.LineExtractor;
 import org.jolly.financely.batch.processor.BankAccountProcessor;
-import org.jolly.financely.batch.reader.StatementPdfReader;
+import org.jolly.financely.batch.reader.PdfReader;
 import org.jolly.financely.model.RawTransaction;
 import org.jolly.financely.model.Transaction;
 import org.slf4j.Logger;
@@ -58,7 +58,7 @@ public class TNGStatementBatchJob {
     }
 
     @Bean
-    public MultiResourceItemReader<RawTransaction> tngItemsReader(StatementPdfReader tngItemReader) {
+    public MultiResourceItemReader<RawTransaction> tngItemsReader(PdfReader tngItemReader) {
         MultiResourceItemReader<RawTransaction> reader = new MultiResourceItemReader<>();
         reader.setResources(resources);
         reader.setStrict(false);
@@ -67,7 +67,7 @@ public class TNGStatementBatchJob {
     }
 
     @Bean
-    public StatementPdfReader tngItemReader(@Qualifier("StatementPdfReader") StatementPdfReader flatFileItemReader) {
+    public PdfReader tngItemReader(@Qualifier("pdfReader") PdfReader flatFileItemReader) {
         LineExtractor defaultLineExtractor = new DefaultLineExtractor();
         defaultLineExtractor.dateRegex("^[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4}.*");
         defaultLineExtractor.linesToSkip(new String[]{
@@ -78,7 +78,7 @@ public class TNGStatementBatchJob {
     }
 
     @Bean
-    public BankAccountProcessor tngItemProcessor(@Qualifier("BankAccountProcessor") BankAccountProcessor itemProcessor) {
+    public BankAccountProcessor tngItemProcessor(@Qualifier("bankAccountProcessor") BankAccountProcessor itemProcessor) {
         itemProcessor.setDateTimeFormatter(DateTimeFormatter.ofPattern("d/M/yyyy"));
         itemProcessor.setDateLengths(new BankAccountProcessor.DateLength(8, 10));
         itemProcessor.setCreditTransfer(new String[]{

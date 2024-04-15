@@ -25,10 +25,10 @@ import java.util.List;
 /**
  * @author jolly
  */
-@Component(value = "StatementPdfReader")
+@Component(value = "pdfReader")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-public class StatementPdfReader implements ResourceAwareItemReaderItemStream<RawTransaction> {
-    private static final Logger log = LoggerFactory.getLogger(StatementPdfReader.class);
+public class PdfReader implements ResourceAwareItemReaderItemStream<RawTransaction> {
+    private static final Logger log = LoggerFactory.getLogger(PdfReader.class);
     private Resource resource;
     private String pdfPassword;
     private List<RawTransaction> items = new LinkedList<>();
@@ -95,6 +95,8 @@ public class StatementPdfReader implements ResourceAwareItemReaderItemStream<Raw
         items = new LinkedList<>();
         if (pdfPassword == null) {
             pdDocument = Loader.loadPDF(resource.getFile());
+        } else {
+            pdDocument = Loader.loadPDF(resource.getFile(), pdfPassword);
         }
         PDFTextStripper stripper = new PDFTextStripper();
         stripper.setSortByPosition(true);

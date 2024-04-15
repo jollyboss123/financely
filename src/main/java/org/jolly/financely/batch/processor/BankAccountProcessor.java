@@ -25,7 +25,7 @@ import java.time.format.DateTimeParseException;
 /**
  * @author jolly
  */
-@Component(value = "BankAccountProcessor")
+@Component(value = "bankAccountProcessor")
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BankAccountProcessor implements ItemProcessor<RawTransaction, Transaction> {
     private static final Logger log = LoggerFactory.getLogger(BankAccountProcessor.class);
@@ -92,7 +92,7 @@ public class BankAccountProcessor implements ItemProcessor<RawTransaction, Trans
             debit = Money.of(BigDecimal.valueOf(Double.parseDouble(amountStr)), true);
         }
 
-        return new Transaction.Builder(item.getFile(),1L, dateInfo.date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)
+        return new Transaction.Builder(item.getFile(), dateInfo.date, Bank.valueOf(MDC.get(MDCKey.BANK.name())), desc)
                 .credit(credit)
                 .debit(debit)
                 .instalment(instalment)
